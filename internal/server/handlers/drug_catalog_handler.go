@@ -42,7 +42,7 @@ func NewDrugCatalogHandlers(drugcatalogService drugcatalogService) *DrugCatalogH
 //	@Success		201		{object}	responses.Data
 //	@Failure		400		{object}	responses.Error
 //	@Security		ApiKeyAuth
-//	@Router			/drugcatalogs [post]
+//	@Router			/drugCatalogs [post]
 func (p *DrugCatalogHandlers) CreateDrugCatalog(c echo.Context) error {
 	// authClaims, err := getAuthClaims(c)
 	// if err != nil {
@@ -79,7 +79,7 @@ func (p *DrugCatalogHandlers) CreateDrugCatalog(c echo.Context) error {
 //	@Produce		json
 //	@Success		200	{array}	responses.DrugCatalogResponse
 //	@Security		ApiKeyAuth
-//	@Router			/drugcatalogs [get]
+//	@Router			/drugCatalogs [get]
 func (p *DrugCatalogHandlers) GetDrugCatalogs(c echo.Context) error {
 	drugcatalogs, err := p.drugcatalogService.GetDrugCatalogs(c.Request().Context())
 	if err != nil {
@@ -104,7 +104,7 @@ func (p *DrugCatalogHandlers) GetDrugCatalogs(c echo.Context) error {
 //	@Failure		400		{object}	responses.Error
 //	@Failure		404		{object}	responses.Error
 //	@Security		ApiKeyAuth
-//	@Router			/drugcatalogs/{id} [put]
+//	@Router			/drugCatalogs/{id} [put]
 func (p *DrugCatalogHandlers) UpdateDrugCatalog(c echo.Context) error {
 	// auth, err := getAuthClaims(c)
 	// if err != nil {
@@ -159,7 +159,7 @@ func (p *DrugCatalogHandlers) UpdateDrugCatalog(c echo.Context) error {
 //	@Success		204	{object}	responses.Data
 //	@Failure		404	{object}	responses.Error
 //	@Security		ApiKeyAuth
-//	@Router			/drugcatalogs/{id} [delete]
+//	@Router			/drugCatalogs/{id} [delete]
 func (p *DrugCatalogHandlers) DeleteDrugCatalog(c echo.Context) error {
 	// auth, err := getAuthClaims(c)
 	// if err != nil {
