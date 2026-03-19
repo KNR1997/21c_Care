@@ -33,7 +33,7 @@ func (r *PatientRepository) GetPatients(ctx context.Context) ([]models.Patient, 
 	// Log the query being executed
 	slog.Info("Executing GetPatients query")
 
-	result := r.db.WithContext(ctx).Find(patients)
+	result := r.db.WithContext(ctx).Find(&patients)
 
 	// Log the result
 	slog.Info("GetPatients result",

@@ -33,7 +33,7 @@ func (r *VisitRepository) GetVisits(ctx context.Context) ([]models.Visit, error)
 	// Log the query being executed
 	slog.Info("Executing GetVisits query")
 
-	result := r.db.WithContext(ctx).Find(visits)
+	result := r.db.WithContext(ctx).Find(&visits)
 
 	// Log the result
 	slog.Info("GetVisits result",

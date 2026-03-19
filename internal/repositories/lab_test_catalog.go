@@ -33,7 +33,7 @@ func (r *LabTestCatalogRepository) GetLabTestCatalogs(ctx context.Context) ([]mo
 	// Log the query being executed
 	slog.Info("Executing GetLabTestCatalogs query")
 
-	result := r.db.WithContext(ctx).Find(labtestcatalogs)
+	result := r.db.WithContext(ctx).Find(&labtestcatalogs)
 
 	// Log the result
 	slog.Info("GetLabTestCatalogs result",

@@ -33,7 +33,7 @@ func (r *DrugCatalogRepository) GetDrugCatalogs(ctx context.Context) ([]models.D
 	// Log the query being executed
 	slog.Info("Executing GetDrugCatalogs query")
 
-	result := r.db.WithContext(ctx).Find(drugcatalogs)
+	result := r.db.WithContext(ctx).Find(&drugcatalogs)
 
 	// Log the result
 	slog.Info("GetDrugCatalogs result",
