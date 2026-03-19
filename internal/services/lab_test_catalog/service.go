@@ -1,4 +1,4 @@
-package labtestcatalog
+package labTestCatalog
 
 import (
 	"context"
