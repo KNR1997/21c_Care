@@ -3,6 +3,7 @@ package responses
 import "go-echo-starter/internal/models"
 
 type PatientResponse struct {
+	ID     uint   `json:"id"`
 	Name   string `json:"name" example:"Saman Perera"`
 	Age    int    `json:"age" example:"34"`
 	Gender string `json:"gender" example:"Male"`
@@ -13,6 +14,7 @@ func NewPatientResponse(patients []models.Patient) *[]PatientResponse {
 
 	for i := range patients {
 		patientResponse = append(patientResponse, PatientResponse{
+			ID:     patients[i].ID,
 			Name:   patients[i].Name,
 			Age:    patients[i].Age,
 			Gender: patients[i].Gender,
