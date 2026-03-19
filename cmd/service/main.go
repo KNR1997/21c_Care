@@ -19,11 +19,14 @@ import (
 	"go-echo-starter/internal/server/middleware"
 	"go-echo-starter/internal/server/routes"
 	"go-echo-starter/internal/services/auth"
+	drugCatalog "go-echo-starter/internal/services/drug_catalog"
+	labTestCatalog "go-echo-starter/internal/services/lab_test_catalog"
 	"go-echo-starter/internal/services/oauth"
 	"go-echo-starter/internal/services/patient"
 	"go-echo-starter/internal/services/post"
 	"go-echo-starter/internal/services/token"
 	"go-echo-starter/internal/services/user"
+	"go-echo-starter/internal/services/visit"
 	"go-echo-starter/internal/slogx"
 
 	"github.com/caarlos0/env/v11"
@@ -83,6 +86,15 @@ func run() error {
 	patientRepository := repositories.NewPatientRepository(gormDB)
 	patientService := patient.NewService(patientRepository)
 
+	drugCatalogRepository := repositories.NewDrugCatalogRepository(gormDB)
+	drugCatalogService := drugCatalog.NewService(drugCatalogRepository)
+
+	labTestcatalogRepository := repositories.NewLabTestCatalogRepository(gormDB)
+	labTestCatalogService := labTestCatalog.NewService(labTestcatalogRepository)
+
+	visitRepository := repositories.NewVisitRepository(gormDB)
+	visitService := visit.NewService(visitRepository)
+
 	provider, err := oidc.NewProvider(context.Background(), "https://accounts.google.com")
 	if err != nil {
 		return fmt.Errorf("oidc.NewProvider: %w", err)
@@ -101,6 +113,9 @@ func run() error {
 	authService := auth.NewService(userService, tokenService)
 	oAuthService := oauth.NewService(verifier, tokenService, userService)
 
+	drugCatalogHandler := handlers.NewDrugCatalogHandlers(drugCatalogService)
+	labTestCatalogHandler := handlers.NewLabTestCatalogHandlers(labTestCatalogService)
+	visitHandler := handlers.NewVisitHandlers(visitService)
 	patientHandler := handlers.NewPatientHandlers(patientService)
 	postHandler := handlers.NewPostHandlers(postService)
 	authHandler := handlers.NewAuthHandler(authService)
@@ -112,6 +127,9 @@ func run() error {
 	requestDebuggerMiddleware := middleware.NewRequestDebugger()
 
 	engine := routes.ConfigureRoutes(routes.Handlers{
+		DrugCatalogHandler:        drugCatalogHandler,
+		LabTestCatalogHandler:     labTestCatalogHandler,
+		VisitHandler:              visitHandler,
 		PatientHandler:            patientHandler,
 		PostHandler:               postHandler,
 		AuthHandler:               authHandler,
