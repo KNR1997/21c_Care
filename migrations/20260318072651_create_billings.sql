@@ -1,0 +1,13 @@
+-- +goose Up
+CREATE TABLE billing (
+    id BIGSERIAL PRIMARY KEY,
+    visit_id BIGINT UNIQUE NOT NULL REFERENCES visits(id) ON DELETE CASCADE,
+    consultation_fee NUMERIC(10,2) NOT NULL DEFAULT 0,
+    drugs_total NUMERIC(10,2) NOT NULL DEFAULT 0,
+    lab_tests_total NUMERIC(10,2) NOT NULL DEFAULT 0,
+    grand_total NUMERIC(10,2) NOT NULL DEFAULT 0,
+    created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
+);
+
+-- +goose Down
+DROP TABLE IF EXISTS billing;
