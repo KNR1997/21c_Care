@@ -42,7 +42,7 @@ func NewLabTestCatalogHandlers(labtestcatalogService labtestcatalogService) *Lab
 //	@Success		201		{object}	responses.Data
 //	@Failure		400		{object}	responses.Error
 //	@Security		ApiKeyAuth
-//	@Router			/labtestcatalogs [post]
+//	@Router			/labTestCatalogs [post]
 func (p *LabTestCatalogHandlers) CreateLabTestCatalog(c echo.Context) error {
 	// authClaims, err := getAuthClaims(c)
 	// if err != nil {
@@ -79,7 +79,7 @@ func (p *LabTestCatalogHandlers) CreateLabTestCatalog(c echo.Context) error {
 //	@Produce		json
 //	@Success		200	{array}	responses.LabTestCatalogResponse
 //	@Security		ApiKeyAuth
-//	@Router			/labtestcatalogs [get]
+//	@Router			/labTestCatalogs [get]
 func (p *LabTestCatalogHandlers) GetLabTestCatalogs(c echo.Context) error {
 	labtestcatalogs, err := p.labtestcatalogService.GetLabTestCatalogs(c.Request().Context())
 	if err != nil {
@@ -104,7 +104,7 @@ func (p *LabTestCatalogHandlers) GetLabTestCatalogs(c echo.Context) error {
 //	@Failure		400		{object}	responses.Error
 //	@Failure		404		{object}	responses.Error
 //	@Security		ApiKeyAuth
-//	@Router			/labtestcatalogs/{id} [put]
+//	@Router			/labTestCatalogs/{id} [put]
 func (p *LabTestCatalogHandlers) UpdateLabTestCatalog(c echo.Context) error {
 	// auth, err := getAuthClaims(c)
 	// if err != nil {
@@ -159,7 +159,7 @@ func (p *LabTestCatalogHandlers) UpdateLabTestCatalog(c echo.Context) error {
 //	@Success		204	{object}	responses.Data
 //	@Failure		404	{object}	responses.Error
 //	@Security		ApiKeyAuth
-//	@Router			/labtestcatalogs/{id} [delete]
+//	@Router			/labTestCatalogs/{id} [delete]
 func (p *LabTestCatalogHandlers) DeleteLabTestCatalog(c echo.Context) error {
 	// auth, err := getAuthClaims(c)
 	// if err != nil {
