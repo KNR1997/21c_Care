@@ -1,4 +1,4 @@
-package drugcatalog
+package drugCatalog
 
 import (
 	"context"
