@@ -13,6 +13,7 @@ type Handlers struct {
 	DrugCatalogHandler    *handlers.DrugCatalogHandlers
 	LabTestCatalogHandler *handlers.LabTestCatalogHandlers
 	PatientHandler        *handlers.PatientHandlers
+	VisitHandler          *handlers.VisitHandlers
 	PostHandler           *handlers.PostHandlers
 	AuthHandler           *handlers.AuthHandler
 	OAuthHandler          *handlers.OAuthHandler
@@ -68,6 +69,9 @@ func ConfigureRoutes(handlers Handlers) *echo.Echo {
 	authorizedAPI.GET("/patients", handlers.PatientHandler.GetPatients)
 	authorizedAPI.PUT("/patients/:id", handlers.PatientHandler.UpdatePatient)
 	authorizedAPI.DELETE("/patients/:id", handlers.PatientHandler.DeletePatient)
+
+	authorizedAPI.POST("/visits", handlers.VisitHandler.CreateVisit)
+	authorizedAPI.GET("/visits", handlers.VisitHandler.GetVisits)
 
 	return engine
 
