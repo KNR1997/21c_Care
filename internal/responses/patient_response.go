@@ -9,7 +9,7 @@ type PatientResponse struct {
 	Gender string `json:"gender" example:"Male"`
 }
 
-func NewPatientResponse(patients []models.Patient) *[]PatientResponse {
+func NewPatientsResponse(patients []models.Patient) *[]PatientResponse {
 	patientResponse := make([]PatientResponse, 0)
 
 	for i := range patients {
@@ -22,4 +22,13 @@ func NewPatientResponse(patients []models.Patient) *[]PatientResponse {
 	}
 
 	return &patientResponse
+}
+
+func NewPatientResponse(patient models.Patient) *PatientResponse {
+	return &PatientResponse{
+		ID:     patient.ID,
+		Name:   patient.Name,
+		Age:    patient.Age,
+		Gender: patient.Gender,
+	}
 }
