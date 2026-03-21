@@ -5,6 +5,7 @@ import (
 	"errors"
 	"go-echo-starter/internal/domain"
 	"go-echo-starter/internal/models"
+	"go-echo-starter/internal/repositories"
 	"go-echo-starter/internal/requests"
 	"go-echo-starter/internal/responses"
 	"net/http"
@@ -14,20 +15,21 @@ import (
 	"github.com/labstack/echo/v4"
 )
 
-type labtestcatalogService interface {
+type LabTestCatalogService interface {
 	Create(ctx context.Context, labtestcatalog *models.LabTestCatalog) error
-	GetLabTestCatalogs(ctx context.Context) ([]models.LabTestCatalog, error)
-	// GetLabTestCatalog(ctx context.Context, id uint) (models.LabTestCatalog, error)
-	UpdateLabTestCatalog(ctx context.Context, request domain.UpdateLabTestCatalogRequest) (*models.LabTestCatalog, error)
-	DeleteLabTestCatalog(ctx context.Context, request domain.DeleteLabTestCatalogRequest) error
+	List(ctx context.Context) ([]models.LabTestCatalog, error)
+	ListPaginated(pagination repositories.Pagination[models.LabTestCatalog]) (*repositories.Pagination[models.LabTestCatalog], error)
+	Get(ctx context.Context, id uint) (models.LabTestCatalog, error)
+	Update(ctx context.Context, request domain.UpdateLabTestCatalogRequest) (*models.LabTestCatalog, error)
+	Delete(ctx context.Context, request domain.DeleteLabTestCatalogRequest) error
 }
 
-type LabTestCatalogHandlers struct {
-	labtestcatalogService labtestcatalogService
+type LabTestCatalogHandler struct {
+	svc LabTestCatalogService
 }
 
-func NewLabTestCatalogHandlers(labtestcatalogService labtestcatalogService) *LabTestCatalogHandlers {
-	return &LabTestCatalogHandlers{labtestcatalogService: labtestcatalogService}
+func NewLabTestCatalogHandlers(svc LabTestCatalogService) *LabTestCatalogHandler {
+	return &LabTestCatalogHandler{svc: svc}
 }
 
 // CreateLabTestCatalog godoc
@@ -43,7 +45,7 @@ func NewLabTestCatalogHandlers(labtestcatalogService labtestcatalogService) *Lab
 //	@Failure		400		{object}	responses.Error
 //	@Security		ApiKeyAuth
 //	@Router			/labTestCatalogs [post]
-func (p *LabTestCatalogHandlers) CreateLabTestCatalog(c echo.Context) error {
+func (p *LabTestCatalogHandler) Create(c echo.Context) error {
 	// authClaims, err := getAuthClaims(c)
 	// if err != nil {
 	// 	return responses.ErrorResponse(c, http.StatusUnauthorized, "Unauthorized")
@@ -63,7 +65,7 @@ func (p *LabTestCatalogHandlers) CreateLabTestCatalog(c echo.Context) error {
 		DefaultPrice: createLabTestCatalogRequest.DefaultPrice,
 	}
 
-	if err := p.labtestcatalogService.Create(c.Request().Context(), labtestcatalog); err != nil {
+	if err := p.svc.Create(c.Request().Context(), labtestcatalog); err != nil {
 		return responses.ErrorResponse(c, http.StatusBadRequest, "Failed to create labtestcatalog: "+err.Error())
 	}
 
@@ -80,13 +82,55 @@ func (p *LabTestCatalogHandlers) CreateLabTestCatalog(c echo.Context) error {
 //	@Success		200	{array}	responses.LabTestCatalogResponse
 //	@Security		ApiKeyAuth
 //	@Router			/labTestCatalogs [get]
-func (p *LabTestCatalogHandlers) GetLabTestCatalogs(c echo.Context) error {
-	labtestcatalogs, err := p.labtestcatalogService.GetLabTestCatalogs(c.Request().Context())
+func (p *LabTestCatalogHandler) List(c echo.Context) error {
+	labtestcatalogs, err := p.svc.List(c.Request().Context())
 	if err != nil {
-		return responses.ErrorResponse(c, http.StatusNotFound, "Failed to get all labtestcatalogs: "+err.Error())
+		return responses.ErrorResponse(c, http.StatusNotFound, "failed to list lab test catalogs: "+err.Error())
 	}
 
-	response := responses.NewLabTestCatalogResponse(labtestcatalogs)
+	response := responses.NewLabTestCatalogsResponse(labtestcatalogs)
+	return responses.Response(c, http.StatusOK, response)
+}
+
+func (p *LabTestCatalogHandler) ListPaginated(c echo.Context) error {
+	limit, err := strconv.Atoi(c.QueryParam("limit"))
+	if err != nil || limit <= 0 {
+		limit = 10
+	}
+
+	page, err := strconv.Atoi(c.QueryParam("page"))
+	if err != nil || page <= 0 {
+		page = 1
+	}
+
+	sort := c.QueryParam("sort")
+
+	pagination := repositories.Pagination[models.LabTestCatalog]{
+		Limit: limit,
+		Page:  page,
+		Sort:  sort,
+	}
+
+	paginatedResult, err := p.svc.ListPaginated(pagination)
+	if err != nil {
+		return responses.ErrorResponse(c, http.StatusNotFound, "failed to list paginated lab test catalogs: "+err.Error())
+	}
+
+	return responses.Response(c, http.StatusOK, paginatedResult)
+}
+
+func (p *LabTestCatalogHandler) Get(c echo.Context) error {
+	labtestcatalogID, err := strconv.ParseUint(c.Param("id"), 10, 64)
+	if err != nil {
+		return responses.ErrorResponse(c, http.StatusBadRequest, "invalid id")
+	}
+
+	labtestcatalog, err := p.svc.Get(c.Request().Context(), uint(labtestcatalogID))
+	if err != nil {
+		return responses.ErrorResponse(c, http.StatusNotFound, "failed to get lab test catalog: "+err.Error())
+	}
+
+	response := responses.NewLabTestCatalogResponse(labtestcatalog)
 	return responses.Response(c, http.StatusOK, response)
 }
 
@@ -105,7 +149,7 @@ func (p *LabTestCatalogHandlers) GetLabTestCatalogs(c echo.Context) error {
 //	@Failure		404		{object}	responses.Error
 //	@Security		ApiKeyAuth
 //	@Router			/labTestCatalogs/{id} [put]
-func (p *LabTestCatalogHandlers) UpdateLabTestCatalog(c echo.Context) error {
+func (p *LabTestCatalogHandler) Update(c echo.Context) error {
 	// auth, err := getAuthClaims(c)
 	// if err != nil {
 	// 	return responses.ErrorResponse(c, http.StatusUnauthorized, "Unauthorized")
@@ -130,7 +174,7 @@ func (p *LabTestCatalogHandlers) UpdateLabTestCatalog(c echo.Context) error {
 		return responses.ErrorResponse(c, http.StatusBadRequest, "Required fields are empty")
 	}
 
-	_, err = p.labtestcatalogService.UpdateLabTestCatalog(c.Request().Context(), domain.UpdateLabTestCatalogRequest{
+	_, err = p.svc.Update(c.Request().Context(), domain.UpdateLabTestCatalogRequest{
 		LabTestCatalogID: labtestcatalogID,
 		Name:             updateLabTestCatalogRequest.Name,
 		DefaultPrice:     updateLabTestCatalogRequest.DefaultPrice,
@@ -160,7 +204,7 @@ func (p *LabTestCatalogHandlers) UpdateLabTestCatalog(c echo.Context) error {
 //	@Failure		404	{object}	responses.Error
 //	@Security		ApiKeyAuth
 //	@Router			/labTestCatalogs/{id} [delete]
-func (p *LabTestCatalogHandlers) DeleteLabTestCatalog(c echo.Context) error {
+func (p *LabTestCatalogHandler) Delete(c echo.Context) error {
 	// auth, err := getAuthClaims(c)
 	// if err != nil {
 	// 	return responses.ErrorResponse(c, http.StatusUnauthorized, "Unauthorized")
@@ -176,7 +220,7 @@ func (p *LabTestCatalogHandlers) DeleteLabTestCatalog(c echo.Context) error {
 		return responses.ErrorResponse(c, http.StatusBadRequest, "Failed to parse post id: "+err.Error())
 	}
 
-	err = p.labtestcatalogService.DeleteLabTestCatalog(c.Request().Context(), domain.DeleteLabTestCatalogRequest{
+	err = p.svc.Delete(c.Request().Context(), domain.DeleteLabTestCatalogRequest{
 		LabTestCatalogID: LabTestCatalogID,
 	})
 	if err != nil {
