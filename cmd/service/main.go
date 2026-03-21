@@ -18,12 +18,17 @@ import (
 	"go-echo-starter/internal/server/handlers"
 	"go-echo-starter/internal/server/middleware"
 	"go-echo-starter/internal/server/routes"
+	"go-echo-starter/internal/services/ai"
 	"go-echo-starter/internal/services/auth"
-	drugCatalog "go-echo-starter/internal/services/drug_catalog"
-	labTestCatalog "go-echo-starter/internal/services/lab_test_catalog"
+	"go-echo-starter/internal/services/clinicalnote"
+	"go-echo-starter/internal/services/drugcatalog"
+	"go-echo-starter/internal/services/labtest"
+	"go-echo-starter/internal/services/labtestcatalog"
 	"go-echo-starter/internal/services/oauth"
 	"go-echo-starter/internal/services/patient"
 	"go-echo-starter/internal/services/post"
+	"go-echo-starter/internal/services/prescribeddrug"
+	"go-echo-starter/internal/services/settings"
 	"go-echo-starter/internal/services/token"
 	"go-echo-starter/internal/services/user"
 	"go-echo-starter/internal/services/visit"
@@ -37,7 +42,7 @@ import (
 
 const shutdownTimeout = 20 * time.Second
 
-//	@title			Echo Demo App
+//	@title			ABC Clinic
 //	@version		1.0
 //	@description	This is a demo version of Echo app.
 
@@ -87,13 +92,32 @@ func run() error {
 	patientService := patient.NewService(patientRepository)
 
 	drugCatalogRepository := repositories.NewDrugCatalogRepository(gormDB)
-	drugCatalogService := drugCatalog.NewService(drugCatalogRepository)
+	drugCatalogService := drugcatalog.NewService(drugCatalogRepository)
 
 	labTestcatalogRepository := repositories.NewLabTestCatalogRepository(gormDB)
-	labTestCatalogService := labTestCatalog.NewService(labTestcatalogRepository)
+	labTestCatalogService := labtestcatalog.NewService(labTestcatalogRepository)
+
+	labTestRepository := repositories.NewLabTestRepository(gormDB)
+	labTestService := labtest.NewService(labTestRepository)
+
+	clinicalNoteRepository := repositories.NewClinicalNoteRepository(gormDB)
+	clinicalNoteService := clinicalnote.NewService(clinicalNoteRepository)
+
+	prescribedDrugRepository := repositories.NewPrescribedDrugRepository(gormDB)
+	prescribedDrugService := prescribeddrug.NewService(prescribedDrugRepository)
+
+	aiService := ai.NewService(cfg.APIKey)
+
+	settingsService := settings.NewService()
 
 	visitRepository := repositories.NewVisitRepository(gormDB)
-	visitService := visit.NewService(visitRepository)
+	visitService := visit.NewService(
+		visitRepository,
+		aiService,
+		labTestService,
+		clinicalNoteService,
+		prescribedDrugService,
+	)
 
 	provider, err := oidc.NewProvider(context.Background(), "https://accounts.google.com")
 	if err != nil {
@@ -113,10 +137,11 @@ func run() error {
 	authService := auth.NewService(userService, tokenService)
 	oAuthService := oauth.NewService(verifier, tokenService, userService)
 
+	settingsHandler := handlers.NewSettingsHandler(settingsService)
 	drugCatalogHandler := handlers.NewDrugCatalogHandlers(drugCatalogService)
 	labTestCatalogHandler := handlers.NewLabTestCatalogHandlers(labTestCatalogService)
 	visitHandler := handlers.NewVisitHandlers(visitService)
-	patientHandler := handlers.NewPatientHandlers(patientService)
+	patientHandler := handlers.NewPatientHandler(patientService)
 	postHandler := handlers.NewPostHandlers(postService)
 	authHandler := handlers.NewAuthHandler(authService)
 	oAuthHandler := handlers.NewOAuthHandler(oAuthService)
@@ -127,6 +152,7 @@ func run() error {
 	requestDebuggerMiddleware := middleware.NewRequestDebugger()
 
 	engine := routes.ConfigureRoutes(routes.Handlers{
+		SettingsHandler:           settingsHandler,
 		DrugCatalogHandler:        drugCatalogHandler,
 		LabTestCatalogHandler:     labTestCatalogHandler,
 		VisitHandler:              visitHandler,
