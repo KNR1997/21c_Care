@@ -8,7 +8,7 @@ type DrugCatalogResponse struct {
 	DefaultPrice float64 `json:"default_price" example:"1200"`
 }
 
-func NewDrugCatalogResponse(drugcatalogs []models.DrugCatalog) *[]DrugCatalogResponse {
+func NewDrugCatalogsResponse(drugcatalogs []models.DrugCatalog) *[]DrugCatalogResponse {
 	drugcatalogResponse := make([]DrugCatalogResponse, 0)
 
 	for i := range drugcatalogs {
@@ -20,4 +20,12 @@ func NewDrugCatalogResponse(drugcatalogs []models.DrugCatalog) *[]DrugCatalogRes
 	}
 
 	return &drugcatalogResponse
+}
+
+func NewDrugCatalogResponse(drugcatalog models.DrugCatalog) *DrugCatalogResponse {
+	return &DrugCatalogResponse{
+		ID:           drugcatalog.ID,
+		Name:         drugcatalog.Name,
+		DefaultPrice: drugcatalog.DefaultPrice,
+	}
 }
