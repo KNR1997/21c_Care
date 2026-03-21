@@ -6,13 +6,15 @@ import (
 	"go-echo-starter/internal/server/handlers"
 
 	"github.com/labstack/echo/v4"
+	"github.com/labstack/echo/v4/middleware"
 	echoSwagger "github.com/swaggo/echo-swagger"
 )
 
 type Handlers struct {
-	DrugCatalogHandler    *handlers.DrugCatalogHandlers
-	LabTestCatalogHandler *handlers.LabTestCatalogHandlers
-	PatientHandler        *handlers.PatientHandlers
+	SettingsHandler       *handlers.SettingsHandler
+	DrugCatalogHandler    *handlers.DrugCatalogHandler
+	LabTestCatalogHandler *handlers.LabTestCatalogHandler
+	PatientHandler        *handlers.PatientHandler
 	VisitHandler          *handlers.VisitHandlers
 	PostHandler           *handlers.PostHandlers
 	AuthHandler           *handlers.AuthHandler
@@ -26,6 +28,9 @@ type Handlers struct {
 
 func ConfigureRoutes(handlers Handlers) *echo.Echo {
 	engine := echo.New()
+
+	// Enable CORS
+	engine.Use(middleware.CORS())
 
 	// Technical API route initialization.
 	// This works with Echo v4
@@ -41,8 +46,10 @@ func ConfigureRoutes(handlers Handlers) *echo.Echo {
 	// Do NOT log request or response bodies; doing so could expose client information.
 	privateAPI := api.Group("")
 
+	privateAPI.GET("/settings", handlers.SettingsHandler.Get)
 	privateAPI.POST("/login", handlers.AuthHandler.Login)
 	privateAPI.POST("/register", handlers.RegisterHandler.Register)
+	privateAPI.POST("/logout", handlers.AuthHandler.Logout)
 
 	// Authorized API route initialization.
 	//
@@ -50,29 +57,34 @@ func ConfigureRoutes(handlers Handlers) *echo.Echo {
 	// before they can be accessed.
 	authorizedAPI := api.Group("", handlers.RequestDebuggerMiddleware, handlers.AuthMiddleware)
 
+	authorizedAPI.GET("/me", handlers.AuthHandler.Me)
+
 	authorizedAPI.POST("/posts", handlers.PostHandler.CreatePost)
 	authorizedAPI.GET("/posts", handlers.PostHandler.GetPosts)
 	authorizedAPI.PUT("/posts/:id", handlers.PostHandler.UpdatePost)
 	authorizedAPI.DELETE("/posts/:id", handlers.PostHandler.DeletePost)
 
-	authorizedAPI.POST("/drugCatalogs", handlers.DrugCatalogHandler.CreateDrugCatalog)
-	authorizedAPI.GET("/drugCatalogs", handlers.DrugCatalogHandler.GetDrugCatalogs)
-	authorizedAPI.PUT("/drugCatalogs/:id", handlers.DrugCatalogHandler.UpdateDrugCatalog)
-	authorizedAPI.DELETE("/drugCatalogs/:id", handlers.DrugCatalogHandler.DeleteDrugCatalog)
+	authorizedAPI.POST("/drugs", handlers.DrugCatalogHandler.Create)
+	authorizedAPI.GET("/drugs", handlers.DrugCatalogHandler.ListPaginated)
+	authorizedAPI.PUT("/drugs/:id", handlers.DrugCatalogHandler.Update)
+	authorizedAPI.GET("/drugs/:id", handlers.DrugCatalogHandler.Get)
+	authorizedAPI.DELETE("/drugs/:id", handlers.DrugCatalogHandler.Delete)
 
-	authorizedAPI.POST("/labTestCatalogs", handlers.LabTestCatalogHandler.CreateLabTestCatalog)
-	authorizedAPI.GET("/labTestCatalogs", handlers.LabTestCatalogHandler.GetLabTestCatalogs)
-	authorizedAPI.PUT("/labTestCatalogs/:id", handlers.LabTestCatalogHandler.UpdateLabTestCatalog)
-	authorizedAPI.DELETE("/labTestCatalogs/:id", handlers.LabTestCatalogHandler.DeleteLabTestCatalog)
+	authorizedAPI.POST("/labTests", handlers.LabTestCatalogHandler.Create)
+	authorizedAPI.GET("/labTests", handlers.LabTestCatalogHandler.ListPaginated)
+	authorizedAPI.PUT("/labTests/:id", handlers.LabTestCatalogHandler.Update)
+	authorizedAPI.GET("/labTests/:id", handlers.LabTestCatalogHandler.Get)
+	authorizedAPI.DELETE("/labTests/:id", handlers.LabTestCatalogHandler.Delete)
 
-	authorizedAPI.POST("/patients", handlers.PatientHandler.CreatePatient)
-	authorizedAPI.GET("/patients", handlers.PatientHandler.GetPatients)
-	authorizedAPI.PUT("/patients/:id", handlers.PatientHandler.UpdatePatient)
-	authorizedAPI.DELETE("/patients/:id", handlers.PatientHandler.DeletePatient)
+	authorizedAPI.POST("/patients", handlers.PatientHandler.Create)
+	authorizedAPI.GET("/patients", handlers.PatientHandler.ListPaginated)
+	authorizedAPI.PUT("/patients/:id", handlers.PatientHandler.Update)
+	authorizedAPI.GET("/patients/:id", handlers.PatientHandler.Get)
+	authorizedAPI.DELETE("/patients/:id", handlers.PatientHandler.Delete)
 
-	authorizedAPI.POST("/visits", handlers.VisitHandler.CreateVisit)
-	authorizedAPI.GET("/visits", handlers.VisitHandler.GetVisits)
+	authorizedAPI.POST("/visits", handlers.VisitHandler.Create)
+	authorizedAPI.GET("/visits", handlers.VisitHandler.ListPaginated)
+	authorizedAPI.GET("/visits/:id", handlers.VisitHandler.Get)
 
 	return engine
-
 }
