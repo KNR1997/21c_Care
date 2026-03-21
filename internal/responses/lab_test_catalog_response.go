@@ -8,7 +8,7 @@ type LabTestCatalogResponse struct {
 	DefaultPrice float64 `json:"default_price" example:"7500"`
 }
 
-func NewLabTestCatalogResponse(labtestcatalogs []models.LabTestCatalog) *[]LabTestCatalogResponse {
+func NewLabTestCatalogsResponse(labtestcatalogs []models.LabTestCatalog) *[]LabTestCatalogResponse {
 	labtestcatalogResponse := make([]LabTestCatalogResponse, 0)
 
 	for i := range labtestcatalogs {
@@ -20,4 +20,12 @@ func NewLabTestCatalogResponse(labtestcatalogs []models.LabTestCatalog) *[]LabTe
 	}
 
 	return &labtestcatalogResponse
+}
+
+func NewLabTestCatalogResponse(labtestcatalog models.LabTestCatalog) *LabTestCatalogResponse {
+	return &LabTestCatalogResponse{
+		ID:           labtestcatalog.ID,
+		Name:         labtestcatalog.Name,
+		DefaultPrice: labtestcatalog.DefaultPrice,
+	}
 }
