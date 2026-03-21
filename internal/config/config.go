@@ -8,6 +8,7 @@ type Config struct {
 	OAuth  OAuthConfig
 	DB     DBConfig
 	HTTP   HTTPConfig
+	APIKey string `env:"API_KEY"`
 }
 
 type DBConfig struct {
