@@ -5,6 +5,7 @@ import (
 	"errors"
 	"go-echo-starter/internal/domain"
 	"go-echo-starter/internal/models"
+	"go-echo-starter/internal/repositories"
 	"go-echo-starter/internal/requests"
 	"go-echo-starter/internal/responses"
 	"net/http"
@@ -14,20 +15,21 @@ import (
 	"github.com/labstack/echo/v4"
 )
 
-type drugcatalogService interface {
-	Create(ctx context.Context, drugcatalog *models.DrugCatalog) error
-	GetDrugCatalogs(ctx context.Context) ([]models.DrugCatalog, error)
-	// GetDrugCatalog(ctx context.Context, id uint) (models.DrugCatalog, error)
-	UpdateDrugCatalog(ctx context.Context, request domain.UpdateDrugCatalogRequest) (*models.DrugCatalog, error)
-	DeleteDrugCatalog(ctx context.Context, request domain.DeleteDrugCatalogRequest) error
+type DrugCatalogService interface {
+	Create(ctx context.Context, catalog *models.DrugCatalog) error
+	List(ctx context.Context) ([]models.DrugCatalog, error)
+	ListPaginated(pagination repositories.Pagination[models.DrugCatalog]) (*repositories.Pagination[models.DrugCatalog], error)
+	Get(ctx context.Context, id uint) (models.DrugCatalog, error)
+	Update(ctx context.Context, request domain.UpdateDrugCatalogRequest) (*models.DrugCatalog, error)
+	Delete(ctx context.Context, request domain.DeleteDrugCatalogRequest) error
 }
 
-type DrugCatalogHandlers struct {
-	drugcatalogService drugcatalogService
+type DrugCatalogHandler struct {
+	svc DrugCatalogService
 }
 
-func NewDrugCatalogHandlers(drugcatalogService drugcatalogService) *DrugCatalogHandlers {
-	return &DrugCatalogHandlers{drugcatalogService: drugcatalogService}
+func NewDrugCatalogHandlers(svc DrugCatalogService) *DrugCatalogHandler {
+	return &DrugCatalogHandler{svc: svc}
 }
 
 // CreateDrugCatalog godoc
@@ -43,31 +45,26 @@ func NewDrugCatalogHandlers(drugcatalogService drugcatalogService) *DrugCatalogH
 //	@Failure		400		{object}	responses.Error
 //	@Security		ApiKeyAuth
 //	@Router			/drugCatalogs [post]
-func (p *DrugCatalogHandlers) CreateDrugCatalog(c echo.Context) error {
-	// authClaims, err := getAuthClaims(c)
-	// if err != nil {
-	// 	return responses.ErrorResponse(c, http.StatusUnauthorized, "Unauthorized")
-	// }
-
-	var createDrugCatalogRequest requests.CreateDrugCatalogRequest
-	if err := c.Bind(&createDrugCatalogRequest); err != nil {
-		return responses.ErrorResponse(c, http.StatusBadRequest, "Failed to bind request: "+err.Error())
+func (h *DrugCatalogHandler) Create(c echo.Context) error {
+	var req requests.CreateDrugCatalogRequest
+	if err := c.Bind(&req); err != nil {
+		return responses.ErrorResponse(c, http.StatusBadRequest, "failed to bind request: "+err.Error())
 	}
 
-	if err := createDrugCatalogRequest.Validate(); err != nil {
-		return responses.ErrorResponse(c, http.StatusBadRequest, "Required fields are empty")
+	if err := req.Validate(); err != nil {
+		return responses.ErrorResponse(c, http.StatusBadRequest, "invalid request")
 	}
 
-	drugcatalog := &models.DrugCatalog{
-		Name:         createDrugCatalogRequest.Name,
-		DefaultPrice: createDrugCatalogRequest.DefaultPrice,
+	catalog := &models.DrugCatalog{
+		Name:         req.Name,
+		DefaultPrice: req.DefaultPrice,
 	}
 
-	if err := p.drugcatalogService.Create(c.Request().Context(), drugcatalog); err != nil {
-		return responses.ErrorResponse(c, http.StatusBadRequest, "Failed to create drugcatalog: "+err.Error())
+	if err := h.svc.Create(c.Request().Context(), catalog); err != nil {
+		return responses.ErrorResponse(c, http.StatusBadRequest, "failed to create drug catalog: "+err.Error())
 	}
 
-	return responses.MessageResponse(c, http.StatusCreated, "DrugCatalog successfully created")
+	return responses.MessageResponse(c, http.StatusCreated, "drug catalog created")
 }
 
 // GetDrugCatalogs godoc
@@ -80,13 +77,54 @@ func (p *DrugCatalogHandlers) CreateDrugCatalog(c echo.Context) error {
 //	@Success		200	{array}	responses.DrugCatalogResponse
 //	@Security		ApiKeyAuth
 //	@Router			/drugCatalogs [get]
-func (p *DrugCatalogHandlers) GetDrugCatalogs(c echo.Context) error {
-	drugcatalogs, err := p.drugcatalogService.GetDrugCatalogs(c.Request().Context())
+func (h *DrugCatalogHandler) List(c echo.Context) error {
+	catalogs, err := h.svc.List(c.Request().Context())
 	if err != nil {
-		return responses.ErrorResponse(c, http.StatusNotFound, "Failed to get all drugcatalogs: "+err.Error())
+		return responses.ErrorResponse(c, http.StatusInternalServerError, "failed to list drug catalogs: "+err.Error())
 	}
 
-	response := responses.NewDrugCatalogResponse(drugcatalogs)
+	return responses.Response(c, http.StatusOK, responses.NewDrugCatalogsResponse(catalogs))
+}
+
+func (p *DrugCatalogHandler) ListPaginated(c echo.Context) error {
+	limit, err := strconv.Atoi(c.QueryParam("limit"))
+	if err != nil || limit <= 0 {
+		limit = 10
+	}
+
+	page, err := strconv.Atoi(c.QueryParam("page"))
+	if err != nil || page <= 0 {
+		page = 1
+	}
+
+	sort := c.QueryParam("sort")
+
+	pagination := repositories.Pagination[models.DrugCatalog]{
+		Limit: limit,
+		Page:  page,
+		Sort:  sort,
+	}
+
+	paginatedResult, err := p.svc.ListPaginated(pagination)
+	if err != nil {
+		return responses.ErrorResponse(c, http.StatusNotFound, "failed to list paginated drug catalogs: "+err.Error())
+	}
+
+	return responses.Response(c, http.StatusOK, paginatedResult)
+}
+
+func (p *DrugCatalogHandler) Get(c echo.Context) error {
+	drugID, err := strconv.ParseUint(c.Param("id"), 10, 64)
+	if err != nil {
+		return responses.ErrorResponse(c, http.StatusBadRequest, "invalid id")
+	}
+
+	drug, err := p.svc.Get(c.Request().Context(), uint(drugID))
+	if err != nil {
+		return responses.ErrorResponse(c, http.StatusNotFound, "failed to get drug: "+err.Error())
+	}
+
+	response := responses.NewDrugCatalogResponse(drug)
 	return responses.Response(c, http.StatusOK, response)
 }
 
@@ -105,48 +143,43 @@ func (p *DrugCatalogHandlers) GetDrugCatalogs(c echo.Context) error {
 //	@Failure		404		{object}	responses.Error
 //	@Security		ApiKeyAuth
 //	@Router			/drugCatalogs/{id} [put]
-func (p *DrugCatalogHandlers) UpdateDrugCatalog(c echo.Context) error {
-	// auth, err := getAuthClaims(c)
-	// if err != nil {
-	// 	return responses.ErrorResponse(c, http.StatusUnauthorized, "Unauthorized")
-	// }
-
-	parsedDrugCatalogID, err := strconv.ParseUint(c.Param("id"), 10, 64)
+func (h *DrugCatalogHandler) Update(c echo.Context) error {
+	parsedID, err := strconv.ParseUint(c.Param("id"), 10, 64)
 	if err != nil {
-		return responses.ErrorResponse(c, http.StatusBadRequest, "Failed to parse post id: "+err.Error())
+		return responses.ErrorResponse(c, http.StatusBadRequest, "invalid id")
 	}
 
-	drugcatalogID, err := safecast.Convert[uint](parsedDrugCatalogID)
+	catalogID, err := safecast.Convert[uint](parsedID)
 	if err != nil {
-		return responses.ErrorResponse(c, http.StatusBadRequest, "Failed to parse post id: "+err.Error())
+		return responses.ErrorResponse(c, http.StatusBadRequest, "invalid id")
 	}
 
-	var updateDrugCatalogRequest requests.UpdateDrugCatalogRequest
-	if err := c.Bind(&updateDrugCatalogRequest); err != nil {
-		return responses.ErrorResponse(c, http.StatusBadRequest, "Failed to bind request: "+err.Error())
+	var req requests.UpdateDrugCatalogRequest
+	if err := c.Bind(&req); err != nil {
+		return responses.ErrorResponse(c, http.StatusBadRequest, "failed to bind request: "+err.Error())
 	}
 
-	if err := updateDrugCatalogRequest.Validate(); err != nil {
-		return responses.ErrorResponse(c, http.StatusBadRequest, "Required fields are empty")
+	if err := req.Validate(); err != nil {
+		return responses.ErrorResponse(c, http.StatusBadRequest, "invalid request")
 	}
 
-	_, err = p.drugcatalogService.UpdateDrugCatalog(c.Request().Context(), domain.UpdateDrugCatalogRequest{
-		DrugCatalogID: drugcatalogID,
-		Name:          updateDrugCatalogRequest.Name,
-		DefaultPrice:  updateDrugCatalogRequest.DefaultPrice,
+	_, err = h.svc.Update(c.Request().Context(), domain.UpdateDrugCatalogRequest{
+		DrugCatalogID: catalogID,
+		Name:          req.Name,
+		DefaultPrice:  req.DefaultPrice,
 	})
 	if err != nil {
 		switch {
-		case errors.Is(err, models.ErrPostNotFound):
-			return responses.ErrorResponse(c, http.StatusNotFound, "Post not found")
+		case errors.Is(err, models.ErrDrugCatalogNotFound):
+			return responses.ErrorResponse(c, http.StatusNotFound, "drug catalog not found")
 		case errors.Is(err, models.ErrForbidden):
-			return responses.ErrorResponse(c, http.StatusForbidden, "Forbidden")
+			return responses.ErrorResponse(c, http.StatusForbidden, "forbidden")
 		default:
-			return responses.ErrorResponse(c, http.StatusInternalServerError, "Failed to update post: "+err.Error())
+			return responses.ErrorResponse(c, http.StatusInternalServerError, "failed to update drug catalog")
 		}
 	}
 
-	return responses.MessageResponse(c, http.StatusOK, "Post successfully updated")
+	return responses.MessageResponse(c, http.StatusOK, "drug catalog updated")
 }
 
 // DeleteDrugCatalog godoc
@@ -160,35 +193,29 @@ func (p *DrugCatalogHandlers) UpdateDrugCatalog(c echo.Context) error {
 //	@Failure		404	{object}	responses.Error
 //	@Security		ApiKeyAuth
 //	@Router			/drugCatalogs/{id} [delete]
-func (p *DrugCatalogHandlers) DeleteDrugCatalog(c echo.Context) error {
-	// auth, err := getAuthClaims(c)
-	// if err != nil {
-	// 	return responses.ErrorResponse(c, http.StatusUnauthorized, "Unauthorized")
-	// }
-
+func (h *DrugCatalogHandler) Delete(c echo.Context) error {
 	parsedID, err := strconv.ParseUint(c.Param("id"), 10, 64)
 	if err != nil {
-		return responses.ErrorResponse(c, http.StatusBadRequest, "Failed to parse post id: "+err.Error())
+		return responses.ErrorResponse(c, http.StatusBadRequest, "invalid id")
 	}
 
-	DrugCatalogID, err := safecast.Convert[uint](parsedID)
+	catalogID, err := safecast.Convert[uint](parsedID)
 	if err != nil {
-		return responses.ErrorResponse(c, http.StatusBadRequest, "Failed to parse post id: "+err.Error())
+		return responses.ErrorResponse(c, http.StatusBadRequest, "invalid id")
 	}
 
-	err = p.drugcatalogService.DeleteDrugCatalog(c.Request().Context(), domain.DeleteDrugCatalogRequest{
-		DrugCatalogID: DrugCatalogID,
-	})
-	if err != nil {
+	if err := h.svc.Delete(c.Request().Context(), domain.DeleteDrugCatalogRequest{
+		DrugCatalogID: catalogID,
+	}); err != nil {
 		switch {
-		case errors.Is(err, models.ErrPostNotFound):
-			return responses.ErrorResponse(c, http.StatusNotFound, "DrugCatalog not found")
+		case errors.Is(err, models.ErrDrugCatalogNotFound):
+			return responses.ErrorResponse(c, http.StatusNotFound, "drug catalog not found")
 		case errors.Is(err, models.ErrForbidden):
-			return responses.ErrorResponse(c, http.StatusForbidden, "Forbidden")
+			return responses.ErrorResponse(c, http.StatusForbidden, "forbidden")
 		default:
-			return responses.ErrorResponse(c, http.StatusInternalServerError, "Failed to delete drugcatalog: "+err.Error())
+			return responses.ErrorResponse(c, http.StatusInternalServerError, "failed to delete drug catalog")
 		}
 	}
 
-	return responses.MessageResponse(c, http.StatusNoContent, "DrugCatalog deleted successfully")
+	return responses.MessageResponse(c, http.StatusNoContent, "drug catalog deleted")
 }
