@@ -51,6 +51,9 @@ func (oa *OAuthHandler) GoogleOAuth(c echo.Context) error {
 		return responses.ErrorResponse(c, http.StatusBadRequest, "Failed to authenticate with Google: "+err.Error())
 	}
 
-	res := responses.NewLoginResponse(accessToken, refreshToken, exp)
+	permissions := [1]string{"super_admin"}
+	role := "super_admin"
+
+	res := responses.NewLoginResponse(accessToken, refreshToken, exp, permissions, role)
 	return responses.Response(c, http.StatusOK, res)
 }

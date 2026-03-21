@@ -57,7 +57,10 @@ func (s *Service) GenerateToken(ctx context.Context, request *requests.LoginRequ
 		return nil, fmt.Errorf("create refresh token: %w", err)
 	}
 
-	response := responses.NewLoginResponse(accessToken, refreshToken, exp)
+	permissions := [1]string{"super_admin"}
+	role := "super_admin"
+
+	response := responses.NewLoginResponse(accessToken, refreshToken, exp, permissions, role)
 
 	return response, nil
 }
@@ -83,7 +86,21 @@ func (s *Service) RefreshToken(ctx context.Context, request *requests.RefreshReq
 		return nil, fmt.Errorf("create refresh token: %w", err)
 	}
 
-	response := responses.NewLoginResponse(accessToken, refreshToken, exp)
+	permissions := [1]string{"super_admin"}
+	role := "super_admin"
+
+	response := responses.NewLoginResponse(accessToken, refreshToken, exp, permissions, role)
+
+	return response, nil
+}
+
+func (s *Service) Me(ctx context.Context, userId uint) (*responses.MeResponse, error) {
+	user, err := s.userService.GetByID(ctx, userId)
+	if err != nil {
+		return nil, fmt.Errorf("get user by email: %w", err)
+	}
+
+	response := responses.NewMeResponse(user.ID, user.Email, user.Name)
 
 	return response, nil
 }
