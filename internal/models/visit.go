@@ -7,9 +7,9 @@ type Visit struct {
 	// CreatedAt time.Time `json:"created_at"`
 
 	// Relations
-	// Patient         Patient          `json:"patient" gorm:"foreignKey:PatientID"`
-	// PrescribedDrugs []PrescribedDrug `json:"prescribed_drugs"`
-	// LabTests        []LabTest        `json:"lab_tests"`
-	// ClinicalNotes   []ClinicalNote   `json:"clinical_notes"`
+	Patient         Patient          `json:"patient" gorm:"foreignKey:PatientID"`
+	PrescribedDrugs []PrescribedDrug `json:"prescribed_drugs"`
+	LabTests        []LabTest        `json:"lab_tests"`
+	ClinicalNotes   []ClinicalNote   `json:"clinical_notes"`
 	// Billing         Billing          `json:"billing"`
 }
