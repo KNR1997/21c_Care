@@ -5,6 +5,7 @@ import (
 	"errors"
 	"go-echo-starter/internal/domain"
 	"go-echo-starter/internal/models"
+	"go-echo-starter/internal/repositories"
 	"go-echo-starter/internal/requests"
 	"go-echo-starter/internal/responses"
 	"net/http"
@@ -14,20 +15,21 @@ import (
 	"github.com/labstack/echo/v4"
 )
 
-type patientService interface {
+type PatientService interface {
 	Create(ctx context.Context, patient *models.Patient) error
-	GetPatients(ctx context.Context) ([]models.Patient, error)
-	// GetPatient(ctx context.Context, id uint) (models.Patient, error)
-	UpdatePatient(ctx context.Context, request domain.UpdatePatientRequest) (*models.Patient, error)
-	DeletePatient(ctx context.Context, request domain.DeletePatientRequest) error
+	List(ctx context.Context) ([]models.Patient, error)
+	ListPaginated(pagination repositories.Pagination[models.Patient]) (*repositories.Pagination[models.Patient], error)
+	Get(ctx context.Context, id uint) (models.Patient, error)
+	Update(ctx context.Context, request domain.UpdatePatientRequest) (*models.Patient, error)
+	Delete(ctx context.Context, request domain.DeletePatientRequest) error
 }
 
-type PatientHandlers struct {
-	patientService patientService
+type PatientHandler struct {
+	svc PatientService
 }
 
-func NewPatientHandlers(patientService patientService) *PatientHandlers {
-	return &PatientHandlers{patientService: patientService}
+func NewPatientHandler(svc PatientService) *PatientHandler {
+	return &PatientHandler{svc: svc}
 }
 
 // CreatePatient godoc
@@ -43,19 +45,14 @@ func NewPatientHandlers(patientService patientService) *PatientHandlers {
 //	@Failure		400		{object}	responses.Error
 //	@Security		ApiKeyAuth
 //	@Router			/patients [post]
-func (p *PatientHandlers) CreatePatient(c echo.Context) error {
-	// authClaims, err := getAuthClaims(c)
-	// if err != nil {
-	// 	return responses.ErrorResponse(c, http.StatusUnauthorized, "Unauthorized")
-	// }
-
+func (p *PatientHandler) Create(c echo.Context) error {
 	var createPatientRequest requests.CreatePatientRequest
 	if err := c.Bind(&createPatientRequest); err != nil {
 		return responses.ErrorResponse(c, http.StatusBadRequest, "Failed to bind request: "+err.Error())
 	}
 
 	if err := createPatientRequest.Validate(); err != nil {
-		return responses.ErrorResponse(c, http.StatusBadRequest, "Required fields are empty")
+		return responses.ErrorResponse(c, http.StatusBadRequest, "invalid request")
 	}
 
 	patient := &models.Patient{
@@ -64,11 +61,11 @@ func (p *PatientHandlers) CreatePatient(c echo.Context) error {
 		Gender: createPatientRequest.Gender,
 	}
 
-	if err := p.patientService.Create(c.Request().Context(), patient); err != nil {
-		return responses.ErrorResponse(c, http.StatusBadRequest, "Failed to create patient: "+err.Error())
+	if err := p.svc.Create(c.Request().Context(), patient); err != nil {
+		return responses.ErrorResponse(c, http.StatusBadRequest, "failed to create patient: "+err.Error())
 	}
 
-	return responses.MessageResponse(c, http.StatusCreated, "Patient successfully created")
+	return responses.MessageResponse(c, http.StatusCreated, "patient successfully created")
 }
 
 // GetPatients godoc
@@ -81,13 +78,55 @@ func (p *PatientHandlers) CreatePatient(c echo.Context) error {
 //	@Success		200	{array}	responses.PatientResponse
 //	@Security		ApiKeyAuth
 //	@Router			/patients [get]
-func (p *PatientHandlers) GetPatients(c echo.Context) error {
-	patients, err := p.patientService.GetPatients(c.Request().Context())
+func (p *PatientHandler) List(c echo.Context) error {
+	patients, err := p.svc.List(c.Request().Context())
 	if err != nil {
-		return responses.ErrorResponse(c, http.StatusNotFound, "Failed to get all patients: "+err.Error())
+		return responses.ErrorResponse(c, http.StatusNotFound, "failed to list patients: "+err.Error())
 	}
 
-	response := responses.NewPatientResponse(patients)
+	response := responses.NewPatientsResponse(patients)
+	return responses.Response(c, http.StatusOK, response)
+}
+
+func (p *PatientHandler) ListPaginated(c echo.Context) error {
+	limit, err := strconv.Atoi(c.QueryParam("limit"))
+	if err != nil || limit <= 0 {
+		limit = 10
+	}
+
+	page, err := strconv.Atoi(c.QueryParam("page"))
+	if err != nil || page <= 0 {
+		page = 1
+	}
+
+	sort := c.QueryParam("sort")
+
+	pagination := repositories.Pagination[models.Patient]{
+		Limit: limit,
+		Page:  page,
+		Sort:  sort,
+	}
+
+	paginatedResult, err := p.svc.ListPaginated(pagination)
+	if err != nil {
+		return responses.ErrorResponse(c, http.StatusNotFound, "failed to list paginated patients: "+err.Error())
+	}
+
+	return responses.Response(c, http.StatusOK, paginatedResult)
+}
+
+func (p *PatientHandler) Get(c echo.Context) error {
+	patientID, err := strconv.ParseUint(c.Param("id"), 10, 64)
+	if err != nil {
+		return responses.ErrorResponse(c, http.StatusBadRequest, "invalid id")
+	}
+
+	patient, err := p.svc.Get(c.Request().Context(), uint(patientID))
+	if err != nil {
+		return responses.ErrorResponse(c, http.StatusNotFound, "failed to get patient: "+err.Error())
+	}
+
+	response := responses.NewPatientResponse(patient)
 	return responses.Response(c, http.StatusOK, response)
 }
 
@@ -106,32 +145,27 @@ func (p *PatientHandlers) GetPatients(c echo.Context) error {
 //	@Failure		404		{object}	responses.Error
 //	@Security		ApiKeyAuth
 //	@Router			/patients/{id} [put]
-func (p *PatientHandlers) UpdatePatient(c echo.Context) error {
-	// auth, err := getAuthClaims(c)
-	// if err != nil {
-	// 	return responses.ErrorResponse(c, http.StatusUnauthorized, "Unauthorized")
-	// }
-
+func (p *PatientHandler) Update(c echo.Context) error {
 	parsedPatientID, err := strconv.ParseUint(c.Param("id"), 10, 64)
 	if err != nil {
-		return responses.ErrorResponse(c, http.StatusBadRequest, "Failed to parse post id: "+err.Error())
+		return responses.ErrorResponse(c, http.StatusBadRequest, "invalid id")
 	}
 
 	patientID, err := safecast.Convert[uint](parsedPatientID)
 	if err != nil {
-		return responses.ErrorResponse(c, http.StatusBadRequest, "Failed to parse post id: "+err.Error())
+		return responses.ErrorResponse(c, http.StatusBadRequest, "invalid id")
 	}
 
 	var updatePatientRequest requests.UpdatePatientRequest
 	if err := c.Bind(&updatePatientRequest); err != nil {
-		return responses.ErrorResponse(c, http.StatusBadRequest, "Failed to bind request: "+err.Error())
+		return responses.ErrorResponse(c, http.StatusBadRequest, "failed to bind request: "+err.Error())
 	}
 
 	if err := updatePatientRequest.Validate(); err != nil {
-		return responses.ErrorResponse(c, http.StatusBadRequest, "Required fields are empty")
+		return responses.ErrorResponse(c, http.StatusBadRequest, "invalid request")
 	}
 
-	_, err = p.patientService.UpdatePatient(c.Request().Context(), domain.UpdatePatientRequest{
+	patient, err := p.svc.Update(c.Request().Context(), domain.UpdatePatientRequest{
 		PatientID: patientID,
 		Name:      updatePatientRequest.Name,
 		Age:       updatePatientRequest.Age,
@@ -140,15 +174,16 @@ func (p *PatientHandlers) UpdatePatient(c echo.Context) error {
 	if err != nil {
 		switch {
 		case errors.Is(err, models.ErrPostNotFound):
-			return responses.ErrorResponse(c, http.StatusNotFound, "Post not found")
+			return responses.ErrorResponse(c, http.StatusNotFound, "patient not found")
 		case errors.Is(err, models.ErrForbidden):
-			return responses.ErrorResponse(c, http.StatusForbidden, "Forbidden")
+			return responses.ErrorResponse(c, http.StatusForbidden, "forbidden")
 		default:
-			return responses.ErrorResponse(c, http.StatusInternalServerError, "Failed to update post: "+err.Error())
+			return responses.ErrorResponse(c, http.StatusInternalServerError, "failed to update post: "+err.Error())
 		}
 	}
 
-	return responses.MessageResponse(c, http.StatusOK, "Post successfully updated")
+	response := responses.NewPatientResponse(*patient)
+	return responses.Response(c, http.StatusOK, response)
 }
 
 // DeletePatient godoc
@@ -162,35 +197,30 @@ func (p *PatientHandlers) UpdatePatient(c echo.Context) error {
 //	@Failure		404	{object}	responses.Error
 //	@Security		ApiKeyAuth
 //	@Router			/patients/{id} [delete]
-func (p *PatientHandlers) DeletePatient(c echo.Context) error {
-	// auth, err := getAuthClaims(c)
-	// if err != nil {
-	// 	return responses.ErrorResponse(c, http.StatusUnauthorized, "Unauthorized")
-	// }
-
+func (p *PatientHandler) Delete(c echo.Context) error {
 	parsedID, err := strconv.ParseUint(c.Param("id"), 10, 64)
 	if err != nil {
-		return responses.ErrorResponse(c, http.StatusBadRequest, "Failed to parse post id: "+err.Error())
+		return responses.ErrorResponse(c, http.StatusBadRequest, "invalid id")
 	}
 
 	PatientID, err := safecast.Convert[uint](parsedID)
 	if err != nil {
-		return responses.ErrorResponse(c, http.StatusBadRequest, "Failed to parse post id: "+err.Error())
+		return responses.ErrorResponse(c, http.StatusBadRequest, "invalid id")
 	}
 
-	err = p.patientService.DeletePatient(c.Request().Context(), domain.DeletePatientRequest{
+	err = p.svc.Delete(c.Request().Context(), domain.DeletePatientRequest{
 		PatientID: PatientID,
 	})
 	if err != nil {
 		switch {
 		case errors.Is(err, models.ErrPostNotFound):
-			return responses.ErrorResponse(c, http.StatusNotFound, "Patient not found")
+			return responses.ErrorResponse(c, http.StatusNotFound, "patient not found")
 		case errors.Is(err, models.ErrForbidden):
-			return responses.ErrorResponse(c, http.StatusForbidden, "Forbidden")
+			return responses.ErrorResponse(c, http.StatusForbidden, "forbidden")
 		default:
-			return responses.ErrorResponse(c, http.StatusInternalServerError, "Failed to delete patient: "+err.Error())
+			return responses.ErrorResponse(c, http.StatusInternalServerError, "failed to delete patient: "+err.Error())
 		}
 	}
 
-	return responses.MessageResponse(c, http.StatusNoContent, "Patient deleted successfully")
+	return responses.MessageResponse(c, http.StatusNoContent, "patien deleted")
 }
