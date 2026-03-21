@@ -17,6 +17,7 @@ import (
 type authService interface {
 	GenerateToken(ctx context.Context, request *requests.LoginRequest) (*responses.LoginResponse, error)
 	RefreshToken(ctx context.Context, request *requests.RefreshRequest) (*responses.LoginResponse, error)
+	Me(ctx context.Context, userId uint) (*responses.MeResponse, error)
 }
 
 type AuthHandler struct {
@@ -42,11 +43,11 @@ func NewAuthHandler(authService authService) *AuthHandler {
 func (h *AuthHandler) Login(c echo.Context) error {
 	var request requests.LoginRequest
 	if err := c.Bind(&request); err != nil {
-		return responses.ErrorResponse(c, http.StatusBadRequest, "Failed to bind request")
+		return responses.ErrorResponse(c, http.StatusBadRequest, "failed to bind request: "+err.Error())
 	}
 
 	if err := request.Validate(); err != nil {
-		return responses.ErrorResponse(c, http.StatusBadRequest, "Required fields are empty or not valid")
+		return responses.ErrorResponse(c, http.StatusBadRequest, "invalid request")
 	}
 
 	response, err := h.authService.GenerateToken(c.Request().Context(), &request)
@@ -87,4 +88,22 @@ func (h *AuthHandler) RefreshToken(c echo.Context) error {
 	}
 
 	return responses.Response(c, http.StatusOK, response)
+}
+
+func (h *AuthHandler) Me(c echo.Context) error {
+	authClaims, err := getAuthClaims(c)
+	if err != nil {
+		return responses.ErrorResponse(c, http.StatusUnauthorized, "Unauthorized")
+	}
+
+	response, err := h.authService.Me(c.Request().Context(), authClaims.ID)
+	if err != nil {
+		return responses.ErrorResponse(c, http.StatusNotFound, "failed to get me data: "+err.Error())
+	}
+
+	return responses.Response(c, http.StatusOK, response)
+}
+
+func (h *AuthHandler) Logout(c echo.Context) error {
+	return nil
 }
