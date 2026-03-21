@@ -27,7 +27,7 @@ func (r *VisitRepository) Create(ctx context.Context, visit *models.Visit) error
 }
 
 // In repositories/visit.go
-func (r *VisitRepository) GetVisits(ctx context.Context) ([]models.Visit, error) {
+func (r *VisitRepository) List(ctx context.Context) ([]models.Visit, error) {
 	var visits []models.Visit
 
 	// Log the query being executed
@@ -50,9 +50,30 @@ func (r *VisitRepository) GetVisits(ctx context.Context) ([]models.Visit, error)
 	return visits, nil
 }
 
-func (r *VisitRepository) GetVisit(ctx context.Context, id uint) (models.Visit, error) {
+func (r *VisitRepository) ListPaginated(pagination Pagination[models.Visit]) (*Pagination[models.Visit], error) {
+	var visits []models.Visit
+
+	r.db.
+		Preload("Patient").
+		Scopes(paginate(models.Visit{}, &pagination, r.db)).
+		Find(&visits)
+
+	pagination.Data = visits
+
+	return &pagination, nil
+}
+
+func (r *VisitRepository) Get(ctx context.Context, id uint) (models.Visit, error) {
 	var visit models.Visit
-	err := r.db.WithContext(ctx).Where("id = ?", id).Take(&visit).Error
+
+	err := r.db.WithContext(ctx).
+		Preload("Patient").
+		Preload("LabTests").
+		Preload("PrescribedDrugs").
+		Preload("ClinicalNotes").
+		Where("id = ?", id).
+		Take(&visit).Error
+
 	if errors.Is(err, gorm.ErrRecordNotFound) {
 		return models.Visit{}, errors.Join(models.ErrVisitNotFound, err)
 	} else if err != nil {
