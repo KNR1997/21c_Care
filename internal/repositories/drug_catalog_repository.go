@@ -18,8 +18,8 @@ func NewDrugCatalogRepository(db *gorm.DB) *DrugCatalogRepository {
 	return &DrugCatalogRepository{db: db}
 }
 
-func (r *DrugCatalogRepository) Create(ctx context.Context, drugcatalog *models.DrugCatalog) error {
-	if err := r.db.WithContext(ctx).Create(drugcatalog).Error; err != nil {
+func (r *DrugCatalogRepository) Create(ctx context.Context, catalog *models.DrugCatalog) error {
+	if err := r.db.WithContext(ctx).Create(catalog).Error; err != nil {
 		return fmt.Errorf("execute insert drugcatalog query: %w", err)
 	}
 
@@ -27,13 +27,13 @@ func (r *DrugCatalogRepository) Create(ctx context.Context, drugcatalog *models.
 }
 
 // In repositories/drugcatalog.go
-func (r *DrugCatalogRepository) GetDrugCatalogs(ctx context.Context) ([]models.DrugCatalog, error) {
-	var drugcatalogs []models.DrugCatalog
+func (r *DrugCatalogRepository) List(ctx context.Context) ([]models.DrugCatalog, error) {
+	var catalogs []models.DrugCatalog
 
 	// Log the query being executed
 	slog.Info("Executing GetDrugCatalogs query")
 
-	result := r.db.WithContext(ctx).Find(&drugcatalogs)
+	result := r.db.WithContext(ctx).Find(&catalogs)
 
 	// Log the result
 	slog.Info("GetDrugCatalogs result",
@@ -45,21 +45,30 @@ func (r *DrugCatalogRepository) GetDrugCatalogs(ctx context.Context) ([]models.D
 	}
 
 	// Log the actual drugcatalogs found
-	slog.Info("DrugCatalogs found", "count", len(drugcatalogs))
+	slog.Info("DrugCatalogs found", "count", len(catalogs))
 
-	return drugcatalogs, nil
+	return catalogs, nil
 }
 
-func (r *DrugCatalogRepository) GetDrugCatalog(ctx context.Context, id uint) (models.DrugCatalog, error) {
-	var drugcatalog models.DrugCatalog
-	err := r.db.WithContext(ctx).Where("id = ?", id).Take(&drugcatalog).Error
+func (r *DrugCatalogRepository) ListPaginated(pagination Pagination[models.DrugCatalog]) (*Pagination[models.DrugCatalog], error) {
+	var catalogs []models.DrugCatalog
+
+	r.db.Scopes(paginate(catalogs, &pagination, r.db)).Find(&catalogs)
+	pagination.Data = catalogs
+
+	return &pagination, nil
+}
+
+func (r *DrugCatalogRepository) Get(ctx context.Context, id uint) (models.DrugCatalog, error) {
+	var catalog models.DrugCatalog
+	err := r.db.WithContext(ctx).Where("id = ?", id).Take(&catalog).Error
 	if errors.Is(err, gorm.ErrRecordNotFound) {
 		return models.DrugCatalog{}, errors.Join(models.ErrDrugCatalogNotFound, err)
 	} else if err != nil {
 		return models.DrugCatalog{}, fmt.Errorf("execute select drugcatalog by id query: %w", err)
 	}
 
-	return drugcatalog, nil
+	return catalog, nil
 }
 
 func (r *DrugCatalogRepository) Update(ctx context.Context, drugcatalog *models.DrugCatalog) error {
