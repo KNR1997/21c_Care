@@ -27,7 +27,7 @@ func (r *PatientRepository) Create(ctx context.Context, patient *models.Patient)
 }
 
 // In repositories/patient.go
-func (r *PatientRepository) GetPatients(ctx context.Context) ([]models.Patient, error) {
+func (r *PatientRepository) List(ctx context.Context) ([]models.Patient, error) {
 	var patients []models.Patient
 
 	// Log the query being executed
@@ -50,7 +50,16 @@ func (r *PatientRepository) GetPatients(ctx context.Context) ([]models.Patient, 
 	return patients, nil
 }
 
-func (r *PatientRepository) GetPatient(ctx context.Context, id uint) (models.Patient, error) {
+func (r *PatientRepository) ListPaginated(pagination Pagination[models.Patient]) (*Pagination[models.Patient], error) {
+	var patients []models.Patient
+
+	r.db.Scopes(paginate(patients, &pagination, r.db)).Find(&patients)
+	pagination.Data = patients
+
+	return &pagination, nil
+}
+
+func (r *PatientRepository) Get(ctx context.Context, id uint) (models.Patient, error) {
 	var patient models.Patient
 	err := r.db.WithContext(ctx).Where("id = ?", id).Take(&patient).Error
 	if errors.Is(err, gorm.ErrRecordNotFound) {
