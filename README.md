@@ -22,7 +22,7 @@ This project demonstrates practical integration of **AI/NLP with a scalable soft
 * Printable PDF medical report
 * Clean REST API architecture
 * Modular backend design
-* Responsive React frontend
+* Responsive NextJS 13 frontend
 
 ---
 
@@ -38,7 +38,7 @@ This project demonstrates practical integration of **AI/NLP with a scalable soft
 
 ### Frontend
 
-* React
+* NextJS 13
 * TypeScript
 * React Query
 * Axios
@@ -239,7 +239,7 @@ Download PDF invoice
 
 ### Prerequisites
 
-* Go 1.21+
+* Go 1.25+
 * Node.js 18+
 * PostgreSQL
 * AI API Key
@@ -251,8 +251,8 @@ Download PDF invoice
 ### 1. Clone Repository
 
 ```
-git clone https://github.com/your-repo/clinic-ai-system.git
-cd backend
+git clone https://github.com/KNR1997/21c_Care.git
+cd 21c_Care
 ```
 
 ### 2. Configure Environment
@@ -307,25 +307,25 @@ cd frontend
 ### 2. Install dependencies
 
 ```
-npm install
+yarn
 ```
 
 ### 3. Configure environment
 
 ```
-NEXT_PUBLIC_REST_API_ENDPOINT=http://localhost:8080
+NEXT_PUBLIC_REST_API_ENDPOINT=http://localhost:7788
 ```
 
 ### 4. Run
 
 ```
-npm run dev
+yarn dev
 ```
 
 App runs on:
 
 ```
-http://localhost:3000
+http://localhost:3002
 ```
 
 ---
@@ -392,45 +392,6 @@ frontend/
 * Consultation fee is fixed
 * Single clinic environment
 * Internet connection required for AI API
-
----
-
-## 🚀 Future Improvements
-
-* Voice-to-text integration
-* Multi-doctor support
-* Patient history tracking
-* Advanced AI medical classification
-* Cloud deployment
-* Role-based authentication
-* Real-time analytics dashboard
-
----
-
-## 🎥 Demo Video
-
-The demo video shows:
-
-* Visit creation
-* AI classification
-* Database storage
-* Billing calculation
-* PDF report generation
-* Invoice download
-
-Duration: 5–10 minutes
-
----
-
-## 📌 Evaluation Criteria Covered
-
-* AI Integration
-* Backend & Logic
-* Frontend UI
-* Database Design
-* Architecture
-* Documentation
-* Innovation
 
 ---
 

@@ -1,0 +1,64 @@
+package ai
+
+import (
+	"context"
+	"encoding/json"
+	"fmt"
+
+	"go-echo-starter/internal/domain"
+
+	"github.com/openai/openai-go/v3"
+	"github.com/openai/openai-go/v3/option"
+	"github.com/openai/openai-go/v3/responses"
+)
+
+type Service struct {
+	client *openai.Client
+}
+
+func NewService(apiKey string) *Service {
+	client := openai.NewClient(
+		option.WithAPIKey(apiKey),
+	)
+
+	return &Service{client: &client}
+}
+
+func (s *Service) ParseMedicalText(ctx context.Context, input string) (*domain.AIResponse, error) {
+
+	prompt := fmt.Sprintf(`
+		Extract structured data from the following medical text.
+
+		Return JSON in this format:
+		{
+		"drugs": [{"name": "", "dosage": "", "frequency": "", "duration": ""}],
+		"lab_tests": [],
+		"notes": ""
+		}
+
+		Text:
+		"%s"
+		`, input)
+
+	resp, err := s.client.Responses.New(ctx, responses.ResponseNewParams{
+		Model: "gpt-oss-20b",
+		Input: responses.ResponseNewParamsInputUnion{
+			OfString: openai.String(prompt),
+		},
+	})
+
+	if err != nil {
+		return nil, fmt.Errorf("openai request failed: %w", err)
+	}
+
+	// Get plain text output safely
+	output := resp.OutputText()
+
+	// Parse JSON into your struct
+	var result domain.AIResponse
+	if err := json.Unmarshal([]byte(output), &result); err != nil {
+		return nil, fmt.Errorf("failed to parse AI JSON: %w\nRaw: %s", err, output)
+	}
+
+	return &result, nil
+}
