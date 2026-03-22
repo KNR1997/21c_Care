@@ -401,6 +401,7 @@
   "input-gallery": "Gallery",
   "button-label-add-banner": "Add Banner",
   "button-label-description-ai": "Generate Description With AI",
+  "button-label-analyze-with-ai": "Analyze With AI",
   "text-delivery-schedule": "Delivery Schedule",
   "delivery-schedule-help-text": "Add your delivery schedule time with proper description from here",
   "input-delivery-time-title": "Title/Time",

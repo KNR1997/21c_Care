@@ -42,8 +42,11 @@ func (s *Service) GenerateVisitPDF(ctx context.Context, visitID uint) ([]byte, e
 	pdf.Ln(10)
 
 	// Drugs
-	pdf.Cell(40, 10, "Prescription")
+	pdf.SetFont("Arial", "B", 12)
+	pdf.Cell(40, 10, "Prescription Medications")
 	pdf.Ln(8)
+
+	pdf.SetFont("Arial", "", 12)
 
 	for _, d := range data.Drugs {
 		pdf.Cell(40, 8, d.DrugName+" "+d.Dosage)
@@ -53,8 +56,11 @@ func (s *Service) GenerateVisitPDF(ctx context.Context, visitID uint) ([]byte, e
 	pdf.Ln(10)
 
 	// Lab tests
+	pdf.SetFont("Arial", "B", 12)
 	pdf.Cell(40, 10, "Lab Tests")
 	pdf.Ln(8)
+
+	pdf.SetFont("Arial", "", 12)
 
 	for _, t := range data.LabTests {
 		pdf.Cell(40, 8, t.TestName)
@@ -64,8 +70,11 @@ func (s *Service) GenerateVisitPDF(ctx context.Context, visitID uint) ([]byte, e
 	pdf.Ln(10)
 
 	// Notes
+	pdf.SetFont("Arial", "B", 12)
 	pdf.Cell(40, 10, "Clinical Notes")
 	pdf.Ln(8)
+
+	pdf.SetFont("Arial", "", 12)
 
 	for _, n := range data.Notes {
 		pdf.MultiCell(0, 6, n.Note, "", "", false)
@@ -74,8 +83,11 @@ func (s *Service) GenerateVisitPDF(ctx context.Context, visitID uint) ([]byte, e
 	pdf.Ln(10)
 
 	// Billing
+	pdf.SetFont("Arial", "B", 12)
 	pdf.Cell(40, 10, "Billing")
 	pdf.Ln(8)
+
+	pdf.SetFont("Arial", "", 12)
 
 	pdf.Cell(40, 8, "Drugs Total")
 	pdf.Cell(40, 8, fmt.Sprintf("%.2f", data.Bill.DrugsTotal))

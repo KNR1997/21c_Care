@@ -22,7 +22,6 @@ import SelectInput from '@/components/ui/select-input';
 import OpenAIButton from '@/components/openAI/openAI.button';
 import ValidationError from '@/components/ui/form-validation-error';
 import StickyFooterPanel from '@/components/ui/sticky-footer-panel';
-import { useModalAction } from '@/components/ui/modal/modal.context';
 
 type FormValues = {
   patient: Patient;
@@ -41,7 +40,6 @@ type IProps = {
 export default function CreateOrUpdateVisitForm({ initialValues }: IProps) {
   const router = useRouter();
   const { t } = useTranslation();
-  const { openModal } = useModalAction();
   const [aiPreview, setAiPreview] = useState<any>(null);
   const [showPreview, setShowPreview] = useState(false);
 
@@ -88,20 +86,11 @@ export default function CreateOrUpdateVisitForm({ initialValues }: IProps) {
   };
 
   const handleGeneratePrompt = async () => {
-    // openModal('GENERATE_DESCRIPTION', {
-    //   control,
-    //   name: 'Apple',
-    //   set_value: '',
-    //   key: 'description',
-    //   suggestion: [],
-    // });
     const result = await previewVisit({
-      // patient_id: control._formValues.patient?.id,
       raw_input: control._formValues.prompt,
     });
     setAiPreview(result);
     setShowPreview(true);
-    // console.log('preview result', result);
   };
 
   return (
@@ -133,7 +122,7 @@ export default function CreateOrUpdateVisitForm({ initialValues }: IProps) {
           </div>
           <div className="relative mb-5">
             <OpenAIButton
-              title={t('form:button-label-description-ai')}
+              title={t('form:button-label-analyze-with-ai')}
               onClick={handleGeneratePrompt}
             />
             <TextArea

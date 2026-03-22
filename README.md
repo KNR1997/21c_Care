@@ -285,13 +285,13 @@ psql -U postgres -d clinic -f database/schema.sql
 ### 5. Start Server
 
 ```
-go run main.go
+air
 ```
 
 Server runs on:
 
 ```
-http://localhost:8080
+http://localhost:7788
 ```
 
 ---
@@ -313,7 +313,7 @@ yarn
 ### 3. Configure environment
 
 ```
-NEXT_PUBLIC_REST_API_ENDPOINT=http://localhost:7788
+copy `.env.template` to `.env`
 ```
 
 ### 4. Run
