@@ -27,7 +27,7 @@ func (r *BillingRepository) Create(ctx context.Context, billing *models.Billing)
 }
 
 // In repositories/billing.go
-func (r *BillingRepository) GetBillings(ctx context.Context) ([]models.Billing, error) {
+func (r *BillingRepository) List(ctx context.Context) ([]models.Billing, error) {
 	var billings []models.Billing
 
 	// Log the query being executed
@@ -50,9 +50,29 @@ func (r *BillingRepository) GetBillings(ctx context.Context) ([]models.Billing, 
 	return billings, nil
 }
 
-func (r *BillingRepository) GetBilling(ctx context.Context, id uint) (models.Billing, error) {
+func (r *BillingRepository) ListPaginated(pagination Pagination[models.Billing]) (*Pagination[models.Billing], error) {
+	var billings []models.Billing
+
+	r.db.
+		Preload("Visit").
+		Preload("Visit.Patient").
+		Scopes(paginate(billings, &pagination, r.db)).Find(&billings)
+	pagination.Data = billings
+
+	return &pagination, nil
+}
+
+func (r *BillingRepository) Get(ctx context.Context, id uint) (models.Billing, error) {
 	var billing models.Billing
-	err := r.db.WithContext(ctx).Where("id = ?", id).Take(&billing).Error
+
+	err := r.db.WithContext(ctx).
+		Preload("Visit").
+		Preload("Visit.Patient").
+		Preload("Visit.LabTests").
+		Preload("Visit.PrescribedDrugs").
+		Preload("Visit.ClinicalNotes").
+		Where("id = ?", id).Take(&billing).Error
+
 	if errors.Is(err, gorm.ErrRecordNotFound) {
 		return models.Billing{}, errors.Join(models.ErrBillingNotFound, err)
 	} else if err != nil {
@@ -76,4 +96,16 @@ func (r *BillingRepository) Delete(ctx context.Context, billing *models.Billing)
 	}
 
 	return nil
+}
+
+func (r *BillingRepository) GetByVisitID(ctx context.Context, visitID int64) (*models.Billing, error) {
+	var billing models.Billing
+	err := r.db.WithContext(ctx).Where("visit_id = ?", visitID).Take(&billing).Error
+
+	if errors.Is(err, gorm.ErrRecordNotFound) {
+		return nil, nil // No billing found for this visit
+	} else if err != nil {
+		return nil, fmt.Errorf("execute select billing by visit_id query: %w", err)
+	}
+	return &billing, nil
 }

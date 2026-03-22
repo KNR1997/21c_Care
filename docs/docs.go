@@ -18,7 +18,7 @@ const docTemplate = `{
     "host": "{{.Host}}",
     "basePath": "{{.BasePath}}",
     "paths": {
-        "/drugcatalogs": {
+        "/drugCatalogs": {
             "get": {
                 "security": [
                     {
@@ -91,7 +91,7 @@ const docTemplate = `{
                 }
             }
         },
-        "/drugcatalogs/{id}": {
+        "/drugCatalogs/{id}": {
             "put": {
                 "security": [
                     {
@@ -220,6 +220,174 @@ const docTemplate = `{
                     },
                     "401": {
                         "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/responses.Error"
+                        }
+                    }
+                }
+            }
+        },
+        "/labTestCatalogs": {
+            "get": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "Get the list of all labtestcatalogs",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "LabTestCatalogs Actions"
+                ],
+                "summary": "Get labtestcatalogs",
+                "operationId": "labtestcatalogs-get",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/responses.LabTestCatalogResponse"
+                            }
+                        }
+                    }
+                }
+            },
+            "post": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "Create labtestcatalog",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "LabTestCatalogs Actions"
+                ],
+                "summary": "Create labtestcatalog",
+                "operationId": "labtestcatalogs-create",
+                "parameters": [
+                    {
+                        "description": "LabTestCatalog name and age",
+                        "name": "params",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/requests.CreateLabTestCatalogRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "201": {
+                        "description": "Created",
+                        "schema": {
+                            "$ref": "#/definitions/responses.Data"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/responses.Error"
+                        }
+                    }
+                }
+            }
+        },
+        "/labTestCatalogs/{id}": {
+            "put": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "Update labtestcatalog",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "LabTestCatalogs Actions"
+                ],
+                "summary": "Update labtestcatalog",
+                "operationId": "labtestcatalogs-update",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "LabTestCatalog ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "LabTestCatalog name and age",
+                        "name": "params",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/requests.UpdateLabTestCatalogRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/responses.Data"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/responses.Error"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/responses.Error"
+                        }
+                    }
+                }
+            },
+            "delete": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "Delete labtestcatalog",
+                "tags": [
+                    "LabTestCatalogs Actions"
+                ],
+                "summary": "Delete labtestcatalog",
+                "operationId": "labtestcatalogs-delete",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "LabTestCatalog ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "204": {
+                        "description": "No Content",
+                        "schema": {
+                            "$ref": "#/definitions/responses.Data"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
                         "schema": {
                             "$ref": "#/definitions/responses.Error"
                         }
@@ -685,6 +853,79 @@ const docTemplate = `{
                     }
                 }
             }
+        },
+        "/visits": {
+            "get": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "Get the list of all visits",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Visits Actions"
+                ],
+                "summary": "Get visits",
+                "operationId": "visits-get",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/responses.VisitResponse"
+                            }
+                        }
+                    }
+                }
+            },
+            "post": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "Create visit",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Visits Actions"
+                ],
+                "summary": "Create visit",
+                "operationId": "visits-create",
+                "parameters": [
+                    {
+                        "description": "Visit title and content",
+                        "name": "params",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/requests.CreateVisitRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "201": {
+                        "description": "Created",
+                        "schema": {
+                            "$ref": "#/definitions/responses.Data"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/responses.Error"
+                        }
+                    }
+                }
+            }
         }
     },
     "definitions": {
@@ -697,11 +938,28 @@ const docTemplate = `{
             "properties": {
                 "default_price": {
                     "type": "number",
-                    "example": 34
+                    "example": 1200
                 },
                 "name": {
                     "type": "string",
-                    "example": "Saman Perera"
+                    "example": "Dupixent"
+                }
+            }
+        },
+        "requests.CreateLabTestCatalogRequest": {
+            "type": "object",
+            "required": [
+                "default_price",
+                "name"
+            ],
+            "properties": {
+                "default_price": {
+                    "type": "number",
+                    "example": 7500
+                },
+                "name": {
+                    "type": "string",
+                    "example": "Blood Test"
                 }
             }
         },
@@ -741,6 +999,23 @@ const docTemplate = `{
                 "title": {
                     "type": "string",
                     "example": "Echo"
+                }
+            }
+        },
+        "requests.CreateVisitRequest": {
+            "type": "object",
+            "required": [
+                "patient_id",
+                "raw_input"
+            ],
+            "properties": {
+                "patient_id": {
+                    "type": "integer",
+                    "example": 1
+                },
+                "raw_input": {
+                    "type": "string",
+                    "example": "Patient has fever for 3 days. Prescribe Paracetamol 500mg twice daily. Order CBC test."
                 }
             }
         },
@@ -815,11 +1090,28 @@ const docTemplate = `{
             "properties": {
                 "default_price": {
                     "type": "number",
-                    "example": 34
+                    "example": 1200
                 },
                 "name": {
                     "type": "string",
-                    "example": "Saman Perera"
+                    "example": "Dupixent"
+                }
+            }
+        },
+        "requests.UpdateLabTestCatalogRequest": {
+            "type": "object",
+            "required": [
+                "default_price",
+                "name"
+            ],
+            "properties": {
+                "default_price": {
+                    "type": "number",
+                    "example": 7500
+                },
+                "name": {
+                    "type": "string",
+                    "example": "Blood Test"
                 }
             }
         },
@@ -878,11 +1170,15 @@ const docTemplate = `{
             "properties": {
                 "default_price": {
                     "type": "number",
-                    "example": 34
+                    "example": 1200
+                },
+                "id": {
+                    "type": "integer",
+                    "example": 1
                 },
                 "name": {
                     "type": "string",
-                    "example": "Saman Perera"
+                    "example": "Dupixent"
                 }
             }
         },
@@ -894,6 +1190,19 @@ const docTemplate = `{
                 },
                 "error": {
                     "type": "string"
+                }
+            }
+        },
+        "responses.LabTestCatalogResponse": {
+            "type": "object",
+            "properties": {
+                "default_price": {
+                    "type": "number",
+                    "example": 7500
+                },
+                "name": {
+                    "type": "string",
+                    "example": "Blood Test"
                 }
             }
         },
@@ -923,6 +1232,7 @@ const docTemplate = `{
                     "example": "Male"
                 },
                 "name": {
+                    "description": "ID     uint   ` + "`" + `json:\"id\"` + "`" + `",
                     "type": "string",
                     "example": "Saman Perera"
                 }
@@ -946,6 +1256,15 @@ const docTemplate = `{
                 "username": {
                     "type": "string",
                     "example": "John Doe"
+                }
+            }
+        },
+        "responses.VisitResponse": {
+            "type": "object",
+            "properties": {
+                "raw_input": {
+                    "type": "string",
+                    "example": "Echo"
                 }
             }
         }

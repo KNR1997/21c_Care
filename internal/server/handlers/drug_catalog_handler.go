@@ -163,7 +163,7 @@ func (h *DrugCatalogHandler) Update(c echo.Context) error {
 		return responses.ErrorResponse(c, http.StatusBadRequest, "invalid request")
 	}
 
-	_, err = h.svc.Update(c.Request().Context(), domain.UpdateDrugCatalogRequest{
+	drug, err := h.svc.Update(c.Request().Context(), domain.UpdateDrugCatalogRequest{
 		DrugCatalogID: catalogID,
 		Name:          req.Name,
 		DefaultPrice:  req.DefaultPrice,
@@ -179,7 +179,8 @@ func (h *DrugCatalogHandler) Update(c echo.Context) error {
 		}
 	}
 
-	return responses.MessageResponse(c, http.StatusOK, "drug catalog updated")
+	response := responses.NewDrugCatalogResponse(*drug)
+	return responses.Response(c, http.StatusOK, response)
 }
 
 // DeleteDrugCatalog godoc

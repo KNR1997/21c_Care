@@ -12,5 +12,5 @@ type Billing struct {
 	CreatedAt       time.Time `json:"created_at"`
 
 	// Relation
-	Visit Visit `json:"visit" gorm:"foreignKey:VisitID"`
+	Visit *Visit `json:"visit" gorm:"foreignKey:VisitID"`
 }

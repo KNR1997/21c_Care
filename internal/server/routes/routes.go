@@ -16,6 +16,8 @@ type Handlers struct {
 	LabTestCatalogHandler *handlers.LabTestCatalogHandler
 	PatientHandler        *handlers.PatientHandler
 	VisitHandler          *handlers.VisitHandlers
+	BillingHandler        *handlers.BillingHandler
+	ReportHandler         *handlers.ReportHandler
 	PostHandler           *handlers.PostHandlers
 	AuthHandler           *handlers.AuthHandler
 	OAuthHandler          *handlers.OAuthHandler
@@ -85,6 +87,12 @@ func ConfigureRoutes(handlers Handlers) *echo.Echo {
 	authorizedAPI.POST("/visits", handlers.VisitHandler.Create)
 	authorizedAPI.GET("/visits", handlers.VisitHandler.ListPaginated)
 	authorizedAPI.GET("/visits/:id", handlers.VisitHandler.Get)
+	authorizedAPI.POST("/visits/preview", handlers.VisitHandler.Preview)
+	authorizedAPI.GET("/visits/:id/report", handlers.ReportHandler.GeneratePDF)
+
+	authorizedAPI.GET("/billings", handlers.BillingHandler.ListPaginated)
+	authorizedAPI.GET("/billings/:id", handlers.BillingHandler.Get)
+	authorizedAPI.POST("/billings", handlers.BillingHandler.Create)
 
 	return engine
 }

@@ -20,6 +20,7 @@ import (
 	"go-echo-starter/internal/server/routes"
 	"go-echo-starter/internal/services/ai"
 	"go-echo-starter/internal/services/auth"
+	"go-echo-starter/internal/services/billing"
 	"go-echo-starter/internal/services/clinicalnote"
 	"go-echo-starter/internal/services/drugcatalog"
 	"go-echo-starter/internal/services/labtest"
@@ -28,6 +29,7 @@ import (
 	"go-echo-starter/internal/services/patient"
 	"go-echo-starter/internal/services/post"
 	"go-echo-starter/internal/services/prescribeddrug"
+	"go-echo-starter/internal/services/report"
 	"go-echo-starter/internal/services/settings"
 	"go-echo-starter/internal/services/token"
 	"go-echo-starter/internal/services/user"
@@ -116,7 +118,19 @@ func run() error {
 		aiService,
 		labTestService,
 		clinicalNoteService,
+		drugCatalogRepository,
+		labTestcatalogRepository,
 		prescribedDrugService,
+	)
+
+	billingService := billing.NewService(
+		repositories.NewBillingRepository(gormDB),
+		prescribedDrugRepository,
+		labTestRepository,
+	)
+
+	reportService := report.NewService(
+		visitRepository,
 	)
 
 	provider, err := oidc.NewProvider(context.Background(), "https://accounts.google.com")
@@ -141,6 +155,8 @@ func run() error {
 	drugCatalogHandler := handlers.NewDrugCatalogHandlers(drugCatalogService)
 	labTestCatalogHandler := handlers.NewLabTestCatalogHandlers(labTestCatalogService)
 	visitHandler := handlers.NewVisitHandlers(visitService)
+	billingHandler := handlers.NewBillingHandlers(billingService)
+	reportHandler := handlers.NewReportHandler(reportService)
 	patientHandler := handlers.NewPatientHandler(patientService)
 	postHandler := handlers.NewPostHandlers(postService)
 	authHandler := handlers.NewAuthHandler(authService)
@@ -156,6 +172,8 @@ func run() error {
 		DrugCatalogHandler:        drugCatalogHandler,
 		LabTestCatalogHandler:     labTestCatalogHandler,
 		VisitHandler:              visitHandler,
+		BillingHandler:            billingHandler,
+		ReportHandler:             reportHandler,
 		PatientHandler:            patientHandler,
 		PostHandler:               postHandler,
 		AuthHandler:               authHandler,

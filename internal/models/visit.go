@@ -11,5 +11,5 @@ type Visit struct {
 	PrescribedDrugs []PrescribedDrug `json:"prescribed_drugs"`
 	LabTests        []LabTest        `json:"lab_tests"`
 	ClinicalNotes   []ClinicalNote   `json:"clinical_notes"`
-	// Billing         Billing          `json:"billing"`
+	Billing         *Billing         `json:"billing" gorm:"foreignKey:VisitID"`
 }

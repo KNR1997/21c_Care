@@ -1,5 +1,5 @@
 -- +goose Up
-CREATE TABLE billing (
+CREATE TABLE billings (
     id BIGSERIAL PRIMARY KEY,
     visit_id BIGINT UNIQUE NOT NULL REFERENCES visits(id) ON DELETE CASCADE,
     consultation_fee NUMERIC(10,2) NOT NULL DEFAULT 0,
@@ -10,4 +10,4 @@ CREATE TABLE billing (
 );
 
 -- +goose Down
-DROP TABLE IF EXISTS billing;
+DROP TABLE IF EXISTS billings;

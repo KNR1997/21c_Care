@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"go-echo-starter/internal/domain"
 	"go-echo-starter/internal/models"
 	"log/slog"
 
@@ -81,6 +82,33 @@ func (r *VisitRepository) Get(ctx context.Context, id uint) (models.Visit, error
 	}
 
 	return visit, nil
+}
+
+func (r *VisitRepository) GetVisitDetails(ctx context.Context, id uint) (domain.VisitDetails, error) {
+	var visit models.Visit
+
+	err := r.db.WithContext(ctx).
+		Preload("Patient").
+		Preload("LabTests").
+		Preload("PrescribedDrugs").
+		Preload("ClinicalNotes").
+		Preload("Billing").
+		Where("id = ?", id).
+		Take(&visit).Error
+
+	if errors.Is(err, gorm.ErrRecordNotFound) {
+		return domain.VisitDetails{}, errors.Join(models.ErrVisitNotFound, err)
+	} else if err != nil {
+		return domain.VisitDetails{}, fmt.Errorf("execute select visit by id query: %w", err)
+	}
+
+	return domain.VisitDetails{
+		PatientName: visit.Patient.Name,
+		Drugs:       visit.PrescribedDrugs,
+		LabTests:    visit.LabTests,
+		Notes:       visit.ClinicalNotes,
+		Bill:        *visit.Billing,
+	}, nil
 }
 
 func (r *VisitRepository) Update(ctx context.Context, visit *models.Visit) error {

@@ -174,7 +174,7 @@ func (p *LabTestCatalogHandler) Update(c echo.Context) error {
 		return responses.ErrorResponse(c, http.StatusBadRequest, "Required fields are empty")
 	}
 
-	_, err = p.svc.Update(c.Request().Context(), domain.UpdateLabTestCatalogRequest{
+	labTestCatalog, err := p.svc.Update(c.Request().Context(), domain.UpdateLabTestCatalogRequest{
 		LabTestCatalogID: labtestcatalogID,
 		Name:             updateLabTestCatalogRequest.Name,
 		DefaultPrice:     updateLabTestCatalogRequest.DefaultPrice,
@@ -190,7 +190,8 @@ func (p *LabTestCatalogHandler) Update(c echo.Context) error {
 		}
 	}
 
-	return responses.MessageResponse(c, http.StatusOK, "Post successfully updated")
+	response := responses.NewLabTestCatalogResponse(*labTestCatalog)
+	return responses.Response(c, http.StatusOK, response)
 }
 
 // DeleteLabTestCatalog godoc

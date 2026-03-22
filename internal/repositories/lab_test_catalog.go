@@ -86,3 +86,14 @@ func (r *LabTestCatalogRepository) Delete(ctx context.Context, catalog *models.L
 
 	return nil
 }
+
+func (r *LabTestCatalogRepository) GetByName(ctx context.Context, name string) (models.LabTestCatalog, error) {
+	var catalog models.LabTestCatalog
+	err := r.db.WithContext(ctx).Where("name = ?", name).Take(&catalog).Error
+	if errors.Is(err, gorm.ErrRecordNotFound) {
+		return models.LabTestCatalog{}, errors.Join(models.ErrLabTestCatalogNotFound, err)
+	} else if err != nil {
+		return models.LabTestCatalog{}, fmt.Errorf("execute select labtestcatalog by name query: %w", err)
+	}
+	return catalog, nil
+}

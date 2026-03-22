@@ -3,10 +3,22 @@ definitions:
   requests.CreateDrugCatalogRequest:
     properties:
       default_price:
-        example: 34
+        example: 1200
         type: number
       name:
-        example: Saman Perera
+        example: Dupixent
+        type: string
+    required:
+    - default_price
+    - name
+    type: object
+  requests.CreateLabTestCatalogRequest:
+    properties:
+      default_price:
+        example: 7500
+        type: number
+      name:
+        example: Blood Test
         type: string
     required:
     - default_price
@@ -39,6 +51,19 @@ definitions:
     required:
     - content
     - title
+    type: object
+  requests.CreateVisitRequest:
+    properties:
+      patient_id:
+        example: 1
+        type: integer
+      raw_input:
+        example: Patient has fever for 3 days. Prescribe Paracetamol 500mg twice daily.
+          Order CBC test.
+        type: string
+    required:
+    - patient_id
+    - raw_input
     type: object
   requests.LoginRequest:
     properties:
@@ -86,10 +111,22 @@ definitions:
   requests.UpdateDrugCatalogRequest:
     properties:
       default_price:
-        example: 34
+        example: 1200
         type: number
       name:
-        example: Saman Perera
+        example: Dupixent
+        type: string
+    required:
+    - default_price
+    - name
+    type: object
+  requests.UpdateLabTestCatalogRequest:
+    properties:
+      default_price:
+        example: 7500
+        type: number
+      name:
+        example: Blood Test
         type: string
     required:
     - default_price
@@ -133,10 +170,13 @@ definitions:
   responses.DrugCatalogResponse:
     properties:
       default_price:
-        example: 34
+        example: 1200
         type: number
+      id:
+        example: 1
+        type: integer
       name:
-        example: Saman Perera
+        example: Dupixent
         type: string
     type: object
   responses.Error:
@@ -144,6 +184,15 @@ definitions:
       code:
         type: integer
       error:
+        type: string
+    type: object
+  responses.LabTestCatalogResponse:
+    properties:
+      default_price:
+        example: 7500
+        type: number
+      name:
+        example: Blood Test
         type: string
     type: object
   responses.LoginResponse:
@@ -164,6 +213,7 @@ definitions:
         example: Male
         type: string
       name:
+        description: ID     uint   `json:"id"`
         example: Saman Perera
         type: string
     type: object
@@ -182,6 +232,12 @@ definitions:
         example: John Doe
         type: string
     type: object
+  responses.VisitResponse:
+    properties:
+      raw_input:
+        example: Echo
+        type: string
+    type: object
 info:
   contact:
     email: kethakaranasinghe@gmail.com
@@ -190,7 +246,7 @@ info:
   title: Echo Demo App
   version: "1.0"
 paths:
-  /drugcatalogs:
+  /drugCatalogs:
     get:
       description: Get the list of all drugcatalogs
       operationId: drugcatalogs-get
@@ -236,7 +292,7 @@ paths:
       summary: Create drugcatalog
       tags:
       - DrugCatalogs Actions
-  /drugcatalogs/{id}:
+  /drugCatalogs/{id}:
     delete:
       description: Delete drugcatalog
       operationId: drugcatalogs-delete
@@ -324,6 +380,113 @@ paths:
       summary: Authenticate user using google provider
       tags:
       - User Actions
+  /labTestCatalogs:
+    get:
+      description: Get the list of all labtestcatalogs
+      operationId: labtestcatalogs-get
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/responses.LabTestCatalogResponse'
+            type: array
+      security:
+      - ApiKeyAuth: []
+      summary: Get labtestcatalogs
+      tags:
+      - LabTestCatalogs Actions
+    post:
+      consumes:
+      - application/json
+      description: Create labtestcatalog
+      operationId: labtestcatalogs-create
+      parameters:
+      - description: LabTestCatalog name and age
+        in: body
+        name: params
+        required: true
+        schema:
+          $ref: '#/definitions/requests.CreateLabTestCatalogRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/responses.Data'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/responses.Error'
+      security:
+      - ApiKeyAuth: []
+      summary: Create labtestcatalog
+      tags:
+      - LabTestCatalogs Actions
+  /labTestCatalogs/{id}:
+    delete:
+      description: Delete labtestcatalog
+      operationId: labtestcatalogs-delete
+      parameters:
+      - description: LabTestCatalog ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      responses:
+        "204":
+          description: No Content
+          schema:
+            $ref: '#/definitions/responses.Data'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/responses.Error'
+      security:
+      - ApiKeyAuth: []
+      summary: Delete labtestcatalog
+      tags:
+      - LabTestCatalogs Actions
+    put:
+      consumes:
+      - application/json
+      description: Update labtestcatalog
+      operationId: labtestcatalogs-update
+      parameters:
+      - description: LabTestCatalog ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: LabTestCatalog name and age
+        in: body
+        name: params
+        required: true
+        schema:
+          $ref: '#/definitions/requests.UpdateLabTestCatalogRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/responses.Data'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/responses.Error'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/responses.Error'
+      security:
+      - ApiKeyAuth: []
+      summary: Update labtestcatalog
+      tags:
+      - LabTestCatalogs Actions
   /login:
     post:
       consumes:
@@ -619,6 +782,52 @@ paths:
       summary: Register
       tags:
       - User Actions
+  /visits:
+    get:
+      description: Get the list of all visits
+      operationId: visits-get
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/responses.VisitResponse'
+            type: array
+      security:
+      - ApiKeyAuth: []
+      summary: Get visits
+      tags:
+      - Visits Actions
+    post:
+      consumes:
+      - application/json
+      description: Create visit
+      operationId: visits-create
+      parameters:
+      - description: Visit title and content
+        in: body
+        name: params
+        required: true
+        schema:
+          $ref: '#/definitions/requests.CreateVisitRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/responses.Data'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/responses.Error'
+      security:
+      - ApiKeyAuth: []
+      summary: Create visit
+      tags:
+      - Visits Actions
 securityDefinitions:
   ApiKeyAuth:
     in: header
