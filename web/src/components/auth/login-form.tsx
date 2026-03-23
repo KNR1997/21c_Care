@@ -51,9 +51,11 @@ const LoginForm = () => {
             if (hasAccess(allowedRoles, data?.permissions)) {
               setAuthCredentials(
                 data?.accessToken,
+                data?.refreshToken,
                 data?.permissions,
                 data?.role,
               );
+
               Router.push(Routes.dashboard);
               return;
             }
