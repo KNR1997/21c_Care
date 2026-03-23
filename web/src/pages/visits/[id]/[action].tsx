@@ -45,9 +45,9 @@ export default function UpdateVisitPage() {
   if (loading) return <Loader text={t('common:text-loading')} />;
   if (error) return <ErrorMessage message={error.message} />;
 
-   function handleGenerateBill() {
+  function handleGenerateBill() {
     if (visit) {
- createBill({
+      createBill({
         visit_id: visit?.id,
       });
 
@@ -61,15 +61,33 @@ export default function UpdateVisitPage() {
       dataIndex: 'drug_name',
       key: 'drug_name',
       align: alignLeft,
-      render: (drug_name: string, item: PrescribedDrug) => (
-        <div>
-          <span>{drug_name}</span>
-          <span className="mx-2">x</span>
-          {/* <span className="font-semibold text-heading">
-              {item.pivot.order_quantity}
-            </span> */}
-        </div>
-      ),
+      // render: (drug_name: string, item: PrescribedDrug) => (
+      //   <div>
+      //     <span>{drug_name}</span>
+      //     <span className="mx-2">x</span>
+      //     {/* <span className="font-semibold text-heading">
+      //         {item.pivot.order_quantity}
+      //       </span> */}
+      //   </div>
+      // ),
+    },
+    {
+      title: 'Dosage',
+      dataIndex: 'dosage',
+      key: 'dosage',
+      align: alignRight,
+    },
+    {
+      title: 'Frequency',
+      dataIndex: 'frequency',
+      key: 'frequency',
+      align: alignRight,
+    },
+    {
+      title: 'Duration',
+      dataIndex: 'duration',
+      key: 'duration',
+      align: alignRight,
     },
     {
       title: t('table:table-item-total'),

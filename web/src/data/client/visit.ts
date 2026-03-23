@@ -29,7 +29,7 @@ export const visitClient = {
     );
   },
   downloadInvoice: (visit_id: number) => {
-    return HttpClient.get<Blob>(`${API_ENDPOINTS.VISITS}/${visit_id}/report`, {
+    return HttpClient.getWithConfig<Blob>(`${API_ENDPOINTS.VISITS}/${visit_id}/report`, {
       responseType: 'blob',
     });
   },

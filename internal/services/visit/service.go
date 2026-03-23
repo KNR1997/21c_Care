@@ -59,39 +59,49 @@ func (s *Service) Create(ctx context.Context, visit *models.Visit, aiResult *dom
 	}
 
 	for _, d := range aiResult.Drugs {
-		catalogDrug, err := s.drugCatalogRepo.GetByName(ctx, d.Name)
+
+		catalogDrug, err := s.drugCatalogRepo.FindBestMatch(ctx, d.Name)
 
 		price := 0.0
+		drugName := d.Name
+
 		if err == nil {
 			price = catalogDrug.DefaultPrice
-		} else {
-			price = 100 // fallback
+			drugName = catalogDrug.Name
 		}
 
 		drug := models.PrescribedDrug{
 			VisitID:  visit.ID,
-			DrugName: d.Name,
+			DrugName: drugName,
 			Price:    price,
 		}
-		s.drugService.Create(ctx, &drug)
+
+		if err := s.drugService.Create(ctx, &drug); err != nil {
+			return err
+		}
 	}
 
-	for _, d := range aiResult.LabTests {
-		catalogTest, err := s.labTestCatalogRepo.GetByName(ctx, d)
+	for _, name := range aiResult.LabTests {
+
+		labTestCatalog, err := s.labTestCatalogRepo.FindBestMatch(ctx, name)
 
 		price := 0.0
+		labTestName := name
+
 		if err == nil {
-			price = catalogTest.DefaultPrice
-		} else {
-			price = 100 // fallback
+			price = labTestCatalog.DefaultPrice
+			labTestName = labTestCatalog.Name
 		}
 
 		labTest := models.LabTest{
 			VisitID:  visit.ID,
-			TestName: catalogTest.Name,
+			TestName: labTestName,
 			Price:    price,
 		}
-		s.labTests.Create(ctx, &labTest)
+
+		if err := s.labTests.Create(ctx, &labTest); err != nil {
+			return err
+		}
 
 	}
 

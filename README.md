@@ -222,6 +222,11 @@ GET /visits/{id}/report
 Download PDF invoice
 ```
 
+### Generate new documentation for api endpoint
+```
+swag init -g main.go -d cmd/service,internal
+```
+
 ---
 
 ## 🖥️ Frontend Workflow
@@ -276,10 +281,10 @@ psql -U postgres
 CREATE DATABASE clinic;
 ```
 
-### 4. Run Migrations
+### 4. Run Migrations (GOOSE command)
 
 ```
-psql -U postgres -d clinic -f database/schema.sql
+goose -dir ./migrations postgres "host=localhost user=myuser password=mypassword dbname=mydatabase port=5432 sslmode=disable" up
 ```
 
 ### 5. Start Server
@@ -301,7 +306,7 @@ http://localhost:7788
 ### 1. Go to frontend
 
 ```
-cd frontend
+cd web
 ```
 
 ### 2. Install dependencies

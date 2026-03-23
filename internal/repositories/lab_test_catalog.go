@@ -97,3 +97,44 @@ func (r *LabTestCatalogRepository) GetByName(ctx context.Context, name string) (
 	}
 	return catalog, nil
 }
+
+func (r *LabTestCatalogRepository) FindBestMatch(ctx context.Context, name string) (models.LabTestCatalog, error) {
+
+	var labTestCatalog models.LabTestCatalog
+
+	// Case-insensitive exact match
+	err := r.db.WithContext(ctx).
+		Where("LOWER(name) = LOWER(?)", name).
+		First(&labTestCatalog).Error
+
+	if err == nil {
+		return labTestCatalog, nil
+	}
+
+	// Partial match
+	err = r.db.WithContext(ctx).
+		Where("name ILIKE ?", "%"+name+"%").
+		First(&labTestCatalog).Error
+
+	if err == nil {
+		return labTestCatalog, nil
+	}
+
+	// reverse partial match
+	err = r.db.WithContext(ctx).
+		Where("? ILIKE '%' || name || '%'", name).
+		First(&labTestCatalog).Error
+
+	if err == nil {
+		return labTestCatalog, nil
+	}
+
+	if errors.Is(err, gorm.ErrRecordNotFound) {
+		return models.LabTestCatalog{}, models.ErrLabTestCatalogNotFound
+	}
+
+	return models.LabTestCatalog{}, fmt.Errorf(
+		"execute select labTestCatalog best match query: %w",
+		err,
+	)
+}

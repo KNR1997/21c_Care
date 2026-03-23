@@ -37,3 +37,12 @@ func NewVisitResponse(visit models.Visit) *VisitResponse {
 		ClinicalNoteResponse:   NewClinicalNotesResponse(visit.ClinicalNotes),
 	}
 }
+
+type VisitPaginationResponse struct {
+	Limit      int             `json:"limit" example:"10"`
+	Page       int             `json:"page" example:"1"`
+	Sort       string          `json:"sort" example:"1"`
+	TotalRows  int64           `json:"total_rows" example:"8"`
+	TotalPages int             `json:"total_pages" example:"2"`
+	Data       []VisitResponse `json:"data"`
+}

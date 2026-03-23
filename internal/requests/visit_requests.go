@@ -26,3 +26,13 @@ type CreateVisitRequest struct {
 type UpdateVisitRequest struct {
 	BasicVisit
 }
+
+type PreviewVisitRequest struct {
+	RawInput string `json:"raw_input" validate:"required" example:"Patient has fever for 3 days. Prescribe Paracetamol 500mg twice daily. Order CBC test."`
+}
+
+func (request PreviewVisitRequest) Validate() error {
+	return validation.ValidateStruct(&request,
+		validation.Field(&request.RawInput, validation.Required),
+	)
+}

@@ -1,22 +1,28 @@
-import Alert from '@/components/ui/alert';
-import Button from '@/components/ui/button';
-import Input from '@/components/ui/input';
-import PasswordInput from '@/components/ui/password-input';
-import { useRouter } from 'next/router';
+import * as yup from 'yup';
 import { useState } from 'react';
+import Router from 'next/router';
+import { useRouter } from 'next/router';
 import { useForm } from 'react-hook-form';
-import { Routes } from '@/config/routes';
 import { useTranslation } from 'next-i18next';
 import { yupResolver } from '@hookform/resolvers/yup';
-import * as yup from 'yup';
-import Link from '@/components/ui/link';
+// config
+import { Routes } from '@/config/routes';
+// utils
 import {
   allowedRoles,
   hasAccess,
   setAuthCredentials,
 } from '@/utils/auth-utils';
-import { Permission } from '@/types';
+// hooks
 import { useRegisterMutation } from '@/data/user';
+// types
+import { Permission } from '@/types';
+// components
+import Link from '@/components/ui/link';
+import Input from '@/components/ui/input';
+import Alert from '@/components/ui/alert';
+import Button from '@/components/ui/button';
+import PasswordInput from '@/components/ui/password-input';
 
 type FormValues = {
   name: string;
@@ -63,24 +69,26 @@ const RegistrationForm = () => {
 
       {
         onSuccess: (data) => {
-          if (data?.token) {
-            if (hasAccess(allowedRoles, data?.permissions)) {
-              setAuthCredentials(data?.token, data?.permissions, data?.role);
-              router.push(Routes.dashboard);
-              return;
-            }
-            setErrorMessage('form:error-enough-permission');
-          } else {
-            setErrorMessage('form:error-credential-wrong');
-          }
+          Router.push(Routes.login);
+          // if (data?.token) {
+          //   if (hasAccess(allowedRoles, data?.permissions)) {
+          //     setAuthCredentials(data?.token, data?.permissions, data?.role);
+          //     router.push(Routes.dashboard);
+          //     return;
+          //   }
+          //   setErrorMessage('form:error-enough-permission');
+          // } else {
+          //   setErrorMessage('form:error-credential-wrong');
+          // }
         },
         onError: (error: any) => {
-          Object.keys(error?.response?.data).forEach((field: any) => {
-            setError(field, {
-              type: 'manual',
-              message: error?.response?.data[field],
-            });
-          });
+          setErrorMessage(error?.response?.data?.error);
+          // Object.keys(error?.response?.data).forEach((field: any) => {
+          //   setError(field, {
+          //     type: 'manual',
+          //     message: error?.response?.data[field],
+          //   });
+          // });
         },
       },
     );

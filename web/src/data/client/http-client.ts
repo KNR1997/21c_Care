@@ -76,8 +76,13 @@ interface SearchParamOptions {
 }
 
 export class HttpClient {
-  static async get<T>(url: string, config?: any) {
+  static async getWithConfig<T>(url: string, config?: any) {
     const response = await Axios.get<T>(url, config);
+    return response.data;
+  }
+
+  static async get<T>(url: string, params?: unknown) {
+    const response = await Axios.get<T>(url, { params });
     return response.data;
   }
 

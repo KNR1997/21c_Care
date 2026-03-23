@@ -29,3 +29,12 @@ func NewLabTestCatalogResponse(labtestcatalog models.LabTestCatalog) *LabTestCat
 		DefaultPrice: labtestcatalog.DefaultPrice,
 	}
 }
+
+type LabTestCatalogPaginationResponse struct {
+	Limit      int                      `json:"limit" example:"10"`
+	Page       int                      `json:"page" example:"1"`
+	Sort       string                   `json:"sort" example:"1"`
+	TotalRows  int64                    `json:"total_rows" example:"8"`
+	TotalPages int                      `json:"total_pages" example:"2"`
+	Data       []LabTestCatalogResponse `json:"data"`
+}

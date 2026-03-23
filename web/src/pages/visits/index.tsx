@@ -31,7 +31,7 @@ export default function Visits() {
   const [sortedBy, setColumn] = useState<SortOrder>(SortOrder.Desc);
   // query
   const { visits, paginatorInfo, loading, error } = useVisitsQuery({
-    limit: 20,
+    limit: 10,
     page,
     name: searchTerm,
     orderBy,

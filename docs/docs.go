@@ -18,30 +18,55 @@ const docTemplate = `{
     "host": "{{.Host}}",
     "basePath": "{{.BasePath}}",
     "paths": {
-        "/drugCatalogs": {
+        "/drugs": {
             "get": {
                 "security": [
                     {
                         "ApiKeyAuth": []
                     }
                 ],
-                "description": "Get the list of all drugcatalogs",
+                "description": "Get the list of drug catalogs with pagination, sorting, and filtering options",
                 "produces": [
                     "application/json"
                 ],
                 "tags": [
                     "DrugCatalogs Actions"
                 ],
-                "summary": "Get drugcatalogs",
-                "operationId": "drugcatalogs-get",
+                "summary": "List drug catalogs with pagination",
+                "operationId": "drug-catalogs-list-paginated",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "default": 10,
+                        "description": "Number of items per page",
+                        "name": "limit",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "default": 1,
+                        "description": "Page number",
+                        "name": "page",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "Sort field (e.g., created_at, updated_at)",
+                        "name": "sort",
+                        "in": "query"
+                    }
+                ],
                 "responses": {
                     "200": {
-                        "description": "OK",
+                        "description": "Paginated list of drug catalogs",
                         "schema": {
-                            "type": "array",
-                            "items": {
-                                "$ref": "#/definitions/responses.DrugCatalogResponse"
-                            }
+                            "$ref": "#/definitions/responses.DrugCatalogPaginationResponse"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/responses.Error"
                         }
                     }
                 }
@@ -91,7 +116,52 @@ const docTemplate = `{
                 }
             }
         },
-        "/drugCatalogs/{id}": {
+        "/drugs/{id}": {
+            "get": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "Get a single drug catalog by its unique identifier",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "DrugCatalogs Actions"
+                ],
+                "summary": "Get drug catalog by ID",
+                "operationId": "drug-catalogs-get-by-id",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "DrugCatalog ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/responses.DrugCatalogResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/responses.Error"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/responses.Error"
+                        }
+                    }
+                }
+            },
             "put": {
                 "security": [
                     {
@@ -861,23 +931,48 @@ const docTemplate = `{
                         "ApiKeyAuth": []
                     }
                 ],
-                "description": "Get the list of all visits",
+                "description": "Get the list of visits with pagination, sorting, and filtering options",
                 "produces": [
                     "application/json"
                 ],
                 "tags": [
                     "Visits Actions"
                 ],
-                "summary": "Get visits",
-                "operationId": "visits-get",
+                "summary": "List visits with pagination",
+                "operationId": "visits-list-paginated",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "default": 10,
+                        "description": "Number of items per page",
+                        "name": "limit",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "default": 1,
+                        "description": "Page number",
+                        "name": "page",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "Sort field (e.g., created_at, updated_at)",
+                        "name": "sort",
+                        "in": "query"
+                    }
+                ],
                 "responses": {
                     "200": {
-                        "description": "OK",
+                        "description": "Paginated list of visits",
                         "schema": {
-                            "type": "array",
-                            "items": {
-                                "$ref": "#/definitions/responses.VisitResponse"
-                            }
+                            "$ref": "#/definitions/responses.VisitPaginationResponse"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/responses.Error"
                         }
                     }
                 }
@@ -926,9 +1021,139 @@ const docTemplate = `{
                     }
                 }
             }
+        },
+        "/visits/preview": {
+            "post": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "Preview a visit's prompt details by classifying using AI",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Visits Actions"
+                ],
+                "summary": "Classify visit prompt",
+                "operationId": "visits-preview",
+                "parameters": [
+                    {
+                        "description": "Visit title and content",
+                        "name": "params",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/requests.PreviewVisitRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/responses.VisitResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/responses.Error"
+                        }
+                    }
+                }
+            }
+        },
+        "/visits/{id}": {
+            "get": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "Get a single visit by its unique identifier",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Visits Actions"
+                ],
+                "summary": "Get visit by ID",
+                "operationId": "visits-get-by-id",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "Visit ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/responses.VisitResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/responses.Error"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/responses.Error"
+                        }
+                    }
+                }
+            }
         }
     },
     "definitions": {
+        "domain.AIResponse": {
+            "type": "object",
+            "properties": {
+                "drugs": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/domain.Drug"
+                    }
+                },
+                "lab_tests": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "notes": {
+                    "type": "string"
+                }
+            }
+        },
+        "domain.Drug": {
+            "type": "object",
+            "properties": {
+                "dosage": {
+                    "type": "string"
+                },
+                "duration": {
+                    "type": "string"
+                },
+                "frequency": {
+                    "type": "string"
+                },
+                "name": {
+                    "type": "string"
+                }
+            }
+        },
         "requests.CreateDrugCatalogRequest": {
             "type": "object",
             "required": [
@@ -1005,10 +1230,14 @@ const docTemplate = `{
         "requests.CreateVisitRequest": {
             "type": "object",
             "required": [
+                "ai_result",
                 "patient_id",
                 "raw_input"
             ],
             "properties": {
+                "ai_result": {
+                    "$ref": "#/definitions/domain.AIResponse"
+                },
                 "patient_id": {
                     "type": "integer",
                     "example": 1
@@ -1044,6 +1273,18 @@ const docTemplate = `{
             "properties": {
                 "token": {
                     "type": "string"
+                }
+            }
+        },
+        "requests.PreviewVisitRequest": {
+            "type": "object",
+            "required": [
+                "raw_input"
+            ],
+            "properties": {
+                "raw_input": {
+                    "type": "string",
+                    "example": "Patient has fever for 3 days. Prescribe Paracetamol 500mg twice daily. Order CBC test."
                 }
             }
         },
@@ -1154,6 +1395,22 @@ const docTemplate = `{
                 }
             }
         },
+        "responses.ClinicalNoteResponse": {
+            "type": "object",
+            "properties": {
+                "id": {
+                    "type": "integer"
+                },
+                "note": {
+                    "type": "string",
+                    "example": "some notes"
+                },
+                "visit_id": {
+                    "type": "integer",
+                    "example": 1
+                }
+            }
+        },
         "responses.Data": {
             "type": "object",
             "properties": {
@@ -1162,6 +1419,37 @@ const docTemplate = `{
                 },
                 "message": {
                     "type": "string"
+                }
+            }
+        },
+        "responses.DrugCatalogPaginationResponse": {
+            "type": "object",
+            "properties": {
+                "data": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/responses.DrugCatalogResponse"
+                    }
+                },
+                "limit": {
+                    "type": "integer",
+                    "example": 10
+                },
+                "page": {
+                    "type": "integer",
+                    "example": 1
+                },
+                "sort": {
+                    "type": "string",
+                    "example": "1"
+                },
+                "total_pages": {
+                    "type": "integer",
+                    "example": 2
+                },
+                "total_rows": {
+                    "type": "integer",
+                    "example": 8
                 }
             }
         },
@@ -1200,9 +1488,34 @@ const docTemplate = `{
                     "type": "number",
                     "example": 7500
                 },
+                "id": {
+                    "type": "integer",
+                    "example": 1
+                },
                 "name": {
                     "type": "string",
                     "example": "Blood Test"
+                }
+            }
+        },
+        "responses.LabTestResponse": {
+            "type": "object",
+            "properties": {
+                "id": {
+                    "type": "integer",
+                    "example": 1
+                },
+                "price": {
+                    "type": "number",
+                    "example": 7500
+                },
+                "test_name": {
+                    "type": "string",
+                    "example": "ECG"
+                },
+                "visit_id": {
+                    "type": "integer",
+                    "example": 1
                 }
             }
         },
@@ -1215,7 +1528,16 @@ const docTemplate = `{
                 "exp": {
                     "type": "integer"
                 },
+                "permissions": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
                 "refreshToken": {
+                    "type": "string"
+                },
+                "role": {
                     "type": "string"
                 }
             }
@@ -1231,8 +1553,10 @@ const docTemplate = `{
                     "type": "string",
                     "example": "Male"
                 },
+                "id": {
+                    "type": "integer"
+                },
                 "name": {
-                    "description": "ID     uint   ` + "`" + `json:\"id\"` + "`" + `",
                     "type": "string",
                     "example": "Saman Perera"
                 }
@@ -1259,9 +1583,102 @@ const docTemplate = `{
                 }
             }
         },
+        "responses.PrescribedDrugResponse": {
+            "type": "object",
+            "properties": {
+                "dosage": {
+                    "type": "string",
+                    "example": "7500"
+                },
+                "drug_name": {
+                    "type": "string",
+                    "example": "ECG"
+                },
+                "duration": {
+                    "type": "string",
+                    "example": "5 days"
+                },
+                "frequency": {
+                    "type": "string",
+                    "example": "Once a day"
+                },
+                "id": {
+                    "type": "integer",
+                    "example": 1
+                },
+                "price": {
+                    "type": "number",
+                    "example": 7500
+                },
+                "visit_id": {
+                    "type": "integer",
+                    "example": 1
+                }
+            }
+        },
+        "responses.VisitPaginationResponse": {
+            "type": "object",
+            "properties": {
+                "data": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/responses.VisitResponse"
+                    }
+                },
+                "limit": {
+                    "type": "integer",
+                    "example": 10
+                },
+                "page": {
+                    "type": "integer",
+                    "example": 1
+                },
+                "sort": {
+                    "type": "string",
+                    "example": "1"
+                },
+                "total_pages": {
+                    "type": "integer",
+                    "example": 2
+                },
+                "total_rows": {
+                    "type": "integer",
+                    "example": 8
+                }
+            }
+        },
         "responses.VisitResponse": {
             "type": "object",
             "properties": {
+                "clinical_notes": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/responses.ClinicalNoteResponse"
+                    }
+                },
+                "id": {
+                    "type": "integer",
+                    "example": 1
+                },
+                "lab_tests": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/responses.LabTestResponse"
+                    }
+                },
+                "patient": {
+                    "$ref": "#/definitions/responses.PatientResponse"
+                },
+                "patient_id": {
+                    "type": "integer",
+                    "example": 1
+                },
+                "prescribed_drugs": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/responses.PrescribedDrugResponse"
+                    }
+                },
                 "raw_input": {
                     "type": "string",
                     "example": "Echo"
@@ -1284,7 +1701,7 @@ var SwaggerInfo = &swag.Spec{
 	Host:             "",
 	BasePath:         "/",
 	Schemes:          []string{},
-	Title:            "Echo Demo App",
+	Title:            "ABC Clinic",
 	Description:      "This is a demo version of Echo app.",
 	InfoInstanceName: "swagger",
 	SwaggerTemplate:  docTemplate,
