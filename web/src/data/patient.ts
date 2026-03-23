@@ -13,6 +13,7 @@ import {
 import { mapPaginatorData } from '@/utils/data-mappers';
 import { patientClient } from './client/patient';
 import { Config } from '@/config';
+import { error } from 'console';
 
 export const usePatientsQuery = (options: Partial<PatientQueryOptions>) => {
   const { data, error, isLoading } = useQuery<PatientPaginator, Error>(
@@ -60,6 +61,9 @@ export const useCreatePatientMutation = () => {
     onSettled: () => {
       queryClient.invalidateQueries(API_ENDPOINTS.PATIENTS);
     },
+    onError: (error: any) => {
+      toast.error(error?.response?.data?.error ?? "Something went wrong")
+    }
   });
 };
 
