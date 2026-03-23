@@ -2,6 +2,7 @@ import axios from 'axios';
 import Cookies from 'js-cookie';
 import Router from 'next/router';
 import invariant from 'tiny-invariant';
+import { handleTokenRefresh } from '@/lib/refresh-manager';
 
 invariant(
   process.env.NEXT_PUBLIC_REST_API_ENDPOINT,
@@ -31,17 +32,34 @@ Axios.interceptors.request.use((config) => {
 });
 
 // Change response data/error here
+// Axios.interceptors.response.use(
+//   (response) => response,
+//   (error) => {
+//     if (
+//       (error.response && error.response.status === 401) ||
+//       (error.response && error.response.status === 403) ||
+//       (error.response &&
+//         error.response.data.message === 'PICKBAZAR_ERROR.NOT_AUTHORIZED')
+//     ) {
+//       Cookies.remove(AUTH_TOKEN_KEY);
+//       // Router.reload();
+//     }
+//     return Promise.reject(error);
+//   },
+// );
+
 Axios.interceptors.response.use(
   (response) => response,
-  (error) => {
-    if (
-      (error.response && error.response.status === 401) ||
-      (error.response && error.response.status === 403) ||
-      (error.response &&
-        error.response.data.message === 'PICKBAZAR_ERROR.NOT_AUTHORIZED')
-    ) {
-      Cookies.remove(AUTH_TOKEN_KEY);
-      // Router.reload();
+  async (error) => {
+    const status = error.response?.status;
+    if (status === 401) {
+      try {
+        return await handleTokenRefresh(error);
+      } catch (refreshError) {
+        Cookies.remove(AUTH_TOKEN_KEY);
+        Router.push('/login');
+        return Promise.reject(refreshError);
+      }
     }
     return Promise.reject(error);
   },
