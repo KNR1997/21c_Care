@@ -32,7 +32,7 @@ func (d *requestDebugger) handle(next echo.HandlerFunc) echo.HandlerFunc {
 	return func(c echo.Context) error {
 		requestBody, err := d.getRequestBody(c)
 		if err != nil {
-			return fmt.Errorf("get request body for logging: %w", err)
+			return err // Don't wrap this error
 		}
 
 		responseBodyGetter := d.getResponseBodyGetter(c)
@@ -51,16 +51,19 @@ func (d *requestDebugger) handle(next echo.HandlerFunc) echo.HandlerFunc {
 
 		message := "Request/response data"
 		if len(attrs) == 0 {
-			message = "Request/response withot any data"
+			message = "Request/response without any data"
 		}
 
 		slog.DebugContext(c.Request().Context(), message, attrs...)
 
-		if errNext != nil {
-			return fmt.Errorf("handle request with request debugger: %w", errNext)
-		}
+		// if errNext != nil {
+		// 	return fmt.Errorf("handle request with request debugger: %w", errNext)
+		// }
 
-		return nil
+		// return nil
+
+		// Return the original error without wrapping
+		return errNext
 	}
 }
 
