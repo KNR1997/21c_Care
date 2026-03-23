@@ -2,7 +2,6 @@ package middleware
 
 import (
 	"context"
-	"fmt"
 	"log/slog"
 	"net/http"
 
@@ -27,7 +26,8 @@ func (l *requestLogger) handle(next echo.HandlerFunc) echo.HandlerFunc {
 	return func(c echo.Context) error {
 		ctx, err := l.tracer.Start(c.Request().Context())
 		if err != nil {
-			return fmt.Errorf("trace starter: %w", err)
+			// return fmt.Errorf("trace starter: %w", err)
+			return err // Don't wrap this error
 		}
 
 		c.SetRequest(c.Request().WithContext(ctx))
@@ -51,10 +51,13 @@ func (l *requestLogger) handle(next echo.HandlerFunc) echo.HandlerFunc {
 
 		slog.Log(c.Request().Context(), level, "Request", slog.Group("http", attrs...))
 
-		if errNext != nil {
-			return fmt.Errorf("handle request with request logger: %w", errNext)
-		}
+		// if errNext != nil {
+		// 	return fmt.Errorf("handle request with request logger: %w", errNext)
+		// }
 
-		return nil
+		// return nil
+
+		// Return the original error without wrapping
+		return errNext
 	}
 }
