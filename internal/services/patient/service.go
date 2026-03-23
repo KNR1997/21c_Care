@@ -17,18 +17,30 @@ type patientRepository interface {
 	Get(ctx context.Context, id uint) (models.Patient, error)
 	Update(ctx context.Context, patient *models.Patient) error
 	Delete(ctx context.Context, patient *models.Patient) error
+	IsExisting(ctx context.Context, name string) (bool, error)
 }
 
 type Service struct {
-	patientRepository patientRepository
+	repo patientRepository
 }
 
-func NewService(patientRepository patientRepository) *Service {
-	return &Service{patientRepository: patientRepository}
+func NewService(repo patientRepository) *Service {
+	return &Service{repo: repo}
 }
 
 func (s *Service) Create(ctx context.Context, patient *models.Patient) error {
-	if err := s.patientRepository.Create(ctx, patient); err != nil {
+	// Check if patient already exists
+	exists, err := s.repo.IsExisting(ctx, patient.Name)
+	if err != nil {
+		return fmt.Errorf("check existing patient: %w", err)
+	}
+
+	if exists {
+		return fmt.Errorf("patient with name '%s' already exists", patient.Name)
+	}
+
+	// Create the new patient
+	if err := s.repo.Create(ctx, patient); err != nil {
 		return fmt.Errorf("create patient in repository: %w", err)
 	}
 
@@ -36,7 +48,7 @@ func (s *Service) Create(ctx context.Context, patient *models.Patient) error {
 }
 
 func (s *Service) List(ctx context.Context) ([]models.Patient, error) {
-	patients, err := s.patientRepository.List(ctx)
+	patients, err := s.repo.List(ctx)
 	if err != nil {
 		return nil, fmt.Errorf("get patients from repository: %w", err)
 	}
@@ -45,7 +57,7 @@ func (s *Service) List(ctx context.Context) ([]models.Patient, error) {
 }
 
 func (s *Service) ListPaginated(pagination repositories.Pagination[models.Patient]) (*repositories.Pagination[models.Patient], error) {
-	paginatedResult, err := s.patientRepository.ListPaginated(pagination)
+	paginatedResult, err := s.repo.ListPaginated(pagination)
 	if err != nil {
 		return nil, fmt.Errorf("get paginated patients from repository: %w", err)
 	}
@@ -53,7 +65,7 @@ func (s *Service) ListPaginated(pagination repositories.Pagination[models.Patien
 }
 
 func (s *Service) Get(ctx context.Context, id uint) (models.Patient, error) {
-	patient, err := s.patientRepository.Get(ctx, id)
+	patient, err := s.repo.Get(ctx, id)
 	if err != nil {
 		return models.Patient{}, fmt.Errorf("get patient from repository: %w", err)
 	}
@@ -62,7 +74,7 @@ func (s *Service) Get(ctx context.Context, id uint) (models.Patient, error) {
 }
 
 func (s *Service) Update(ctx context.Context, request domain.UpdatePatientRequest) (*models.Patient, error) {
-	patient, err := s.patientRepository.Get(ctx, request.PatientID)
+	patient, err := s.repo.Get(ctx, request.PatientID)
 	if err != nil {
 		return nil, fmt.Errorf("get stored patient from repository: %w", err)
 	}
@@ -71,7 +83,7 @@ func (s *Service) Update(ctx context.Context, request domain.UpdatePatientReques
 	patient.Age = request.Age
 	patient.Gender = request.Gender
 
-	if err := s.patientRepository.Update(ctx, &patient); err != nil {
+	if err := s.repo.Update(ctx, &patient); err != nil {
 		return nil, fmt.Errorf("update patient in repository: %w", err)
 	}
 
@@ -79,12 +91,12 @@ func (s *Service) Update(ctx context.Context, request domain.UpdatePatientReques
 }
 
 func (s *Service) Delete(ctx context.Context, request domain.DeletePatientRequest) error {
-	patient, err := s.patientRepository.Get(ctx, request.PatientID)
+	patient, err := s.repo.Get(ctx, request.PatientID)
 	if err != nil {
 		return fmt.Errorf("get stored patient from repository: %w", err)
 	}
 
-	if err := s.patientRepository.Delete(ctx, &patient); err != nil {
+	if err := s.repo.Delete(ctx, &patient); err != nil {
 		return fmt.Errorf("delete patient in repository: %w", err)
 	}
 
