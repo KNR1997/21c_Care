@@ -60,6 +60,9 @@ export const useCreateDrugMutation = () => {
     onSettled: () => {
       queryClient.invalidateQueries(API_ENDPOINTS.DRUGS);
     },
+    onError: (error: any) => {
+      toast.error(error?.response?.data?.error ?? "Something went wrong")
+    }
   });
 };
 

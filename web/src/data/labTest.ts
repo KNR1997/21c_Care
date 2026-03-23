@@ -60,6 +60,9 @@ export const useCreateLabTestMutation = () => {
     onSettled: () => {
       queryClient.invalidateQueries(API_ENDPOINTS.LABTESTS);
     },
+    onError: (error: any) => {
+      toast.error(error?.response?.data?.error ?? "Something went wrong")
+    }
   });
 };
 
