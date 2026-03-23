@@ -22,6 +22,7 @@ import SelectInput from '@/components/ui/select-input';
 import OpenAIButton from '@/components/openAI/openAI.button';
 import ValidationError from '@/components/ui/form-validation-error';
 import StickyFooterPanel from '@/components/ui/sticky-footer-panel';
+import { toast } from 'react-toastify';
 
 type FormValues = {
   patient: Patient;
@@ -86,11 +87,16 @@ export default function CreateOrUpdateVisitForm({ initialValues }: IProps) {
   };
 
   const handleGeneratePrompt = async () => {
-    const result = await previewVisit({
-      raw_input: control._formValues.prompt,
-    });
-    setAiPreview(result);
-    setShowPreview(true);
+    try {
+      const result = await previewVisit({
+        raw_input: control._formValues.prompt,
+      });
+      setAiPreview(result);
+      setShowPreview(true);
+    } catch (error: any) {
+      // Handle error if needed
+      toast.error('Failed to generate preview:', error?.response.data.error);
+    }
   };
 
   return (
@@ -124,6 +130,7 @@ export default function CreateOrUpdateVisitForm({ initialValues }: IProps) {
             <OpenAIButton
               title={t('form:button-label-analyze-with-ai')}
               onClick={handleGeneratePrompt}
+              isLoading={previewing}
             />
             <TextArea
               label={t('form:input-label-prompt')}
@@ -209,7 +216,7 @@ export default function CreateOrUpdateVisitForm({ initialValues }: IProps) {
 
           <Button
             loading={creating || updating}
-            disabled={creating || updating}
+            disabled={creating || updating || !showPreview}
             className="text-sm md:text-base"
           >
             {initialValues
