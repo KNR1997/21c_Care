@@ -65,7 +65,7 @@ func (s *Service) GenerateToken(ctx context.Context, request *requests.LoginRequ
 	return response, nil
 }
 
-func (s *Service) RefreshToken(ctx context.Context, request *requests.RefreshRequest) (*responses.LoginResponse, error) {
+func (s *Service) RefreshToken(ctx context.Context, request *requests.RefreshRequest) (*responses.RefreshTokenResponse, error) {
 	claims, err := s.tokenService.ParseRefreshToken(ctx, request.Token)
 	if err != nil {
 		return nil, errors.Join(fmt.Errorf("parse token: %w", err), models.ErrInvalidAuthToken)
@@ -76,20 +76,20 @@ func (s *Service) RefreshToken(ctx context.Context, request *requests.RefreshReq
 		return nil, fmt.Errorf("get user by email: %w", err)
 	}
 
-	accessToken, exp, err := s.tokenService.CreateAccessToken(ctx, &user)
+	accessToken, _, err := s.tokenService.CreateAccessToken(ctx, &user)
 	if err != nil {
 		return nil, fmt.Errorf("create access token: %w", err)
 	}
 
-	refreshToken, err := s.tokenService.CreateRefreshToken(ctx, &user)
-	if err != nil {
-		return nil, fmt.Errorf("create refresh token: %w", err)
-	}
+	// refreshToken, err := s.tokenService.CreateRefreshToken(ctx, &user)
+	// if err != nil {
+	// 	return nil, fmt.Errorf("create refresh token: %w", err)
+	// }
 
-	permissions := [1]string{"super_admin"}
-	role := "super_admin"
+	// permissions := [1]string{"super_admin"}
+	// role := "super_admin"
 
-	response := responses.NewLoginResponse(accessToken, refreshToken, exp, permissions, role)
+	response := responses.NewRefreshTokenResponse(accessToken)
 
 	return response, nil
 }
