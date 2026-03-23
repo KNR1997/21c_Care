@@ -44,7 +44,7 @@ func NewDrugCatalogHandlers(svc DrugCatalogService) *DrugCatalogHandler {
 //	@Success		201		{object}	responses.Data
 //	@Failure		400		{object}	responses.Error
 //	@Security		ApiKeyAuth
-//	@Router			/drugCatalogs [post]
+//	@Router			/drugs [post]
 func (h *DrugCatalogHandler) Create(c echo.Context) error {
 	var req requests.CreateDrugCatalogRequest
 	if err := c.Bind(&req); err != nil {
@@ -76,16 +76,30 @@ func (h *DrugCatalogHandler) Create(c echo.Context) error {
 //	@Produce		json
 //	@Success		200	{array}	responses.DrugCatalogResponse
 //	@Security		ApiKeyAuth
-//	@Router			/drugCatalogs [get]
-func (h *DrugCatalogHandler) List(c echo.Context) error {
-	catalogs, err := h.svc.List(c.Request().Context())
-	if err != nil {
-		return responses.ErrorResponse(c, http.StatusInternalServerError, "failed to list drug catalogs: "+err.Error())
-	}
+//	@Router			/drugs [get]
+// func (h *DrugCatalogHandler) List(c echo.Context) error {
+// 	catalogs, err := h.svc.List(c.Request().Context())
+// 	if err != nil {
+// 		return responses.ErrorResponse(c, http.StatusInternalServerError, "failed to list drug catalogs: "+err.Error())
+// 	}
 
-	return responses.Response(c, http.StatusOK, responses.NewDrugCatalogsResponse(catalogs))
-}
+// 	return responses.Response(c, http.StatusOK, responses.NewDrugCatalogsResponse(catalogs))
+// }
 
+// ListPaginated godoc
+//
+//	@Summary		List drug catalogs with pagination
+//	@Description	Get the list of drug catalogs with pagination, sorting, and filtering options
+//	@ID				drug-catalogs-list-paginated
+//	@Tags			DrugCatalogs Actions
+//	@Produce		json
+//	@Param			limit	query		int		false	"Number of items per page"	default(10)
+//	@Param			page	query		int		false	"Page number"				default(1)
+//	@Param			sort	query		string	false	"Sort field (e.g., created_at, updated_at)"
+//	@Success		200		{object}	responses.DrugCatalogPaginationResponse	"Paginated list of drug catalogs"
+//	@Failure		404		{object}	responses.Error
+//	@Security		ApiKeyAuth
+//	@Router			/drugs [get]
 func (p *DrugCatalogHandler) ListPaginated(c echo.Context) error {
 	limit, err := strconv.Atoi(c.QueryParam("limit"))
 	if err != nil || limit <= 0 {
@@ -113,6 +127,19 @@ func (p *DrugCatalogHandler) ListPaginated(c echo.Context) error {
 	return responses.Response(c, http.StatusOK, paginatedResult)
 }
 
+// GetDrugCatalog godoc
+//
+//	@Summary		Get drug catalog by ID
+//	@Description	Get a single drug catalog by its unique identifier
+//	@ID				drug-catalogs-get-by-id
+//	@Tags			DrugCatalogs Actions
+//	@Produce		json
+//	@Param			id	path		int	true	"DrugCatalog ID"
+//	@Success		200	{object}	responses.DrugCatalogResponse
+//	@Failure		400	{object}	responses.Error
+//	@Failure		404	{object}	responses.Error
+//	@Security		ApiKeyAuth
+//	@Router			/drugs/{id} [get]
 func (p *DrugCatalogHandler) Get(c echo.Context) error {
 	drugID, err := strconv.ParseUint(c.Param("id"), 10, 64)
 	if err != nil {
@@ -142,7 +169,7 @@ func (p *DrugCatalogHandler) Get(c echo.Context) error {
 //	@Failure		400		{object}	responses.Error
 //	@Failure		404		{object}	responses.Error
 //	@Security		ApiKeyAuth
-//	@Router			/drugCatalogs/{id} [put]
+//	@Router			/drugs/{id} [put]
 func (h *DrugCatalogHandler) Update(c echo.Context) error {
 	parsedID, err := strconv.ParseUint(c.Param("id"), 10, 64)
 	if err != nil {
@@ -193,7 +220,7 @@ func (h *DrugCatalogHandler) Update(c echo.Context) error {
 //	@Success		204	{object}	responses.Data
 //	@Failure		404	{object}	responses.Error
 //	@Security		ApiKeyAuth
-//	@Router			/drugCatalogs/{id} [delete]
+//	@Router			/drugs/{id} [delete]
 func (h *DrugCatalogHandler) Delete(c echo.Context) error {
 	parsedID, err := strconv.ParseUint(c.Param("id"), 10, 64)
 	if err != nil {
