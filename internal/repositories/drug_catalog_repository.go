@@ -138,3 +138,12 @@ func (r *DrugCatalogRepository) FindBestMatch(ctx context.Context, name string) 
 		err,
 	)
 }
+
+func (r *DrugCatalogRepository) IsExisting(ctx context.Context, name string) (bool, error) {
+	var count int64
+	err := r.db.WithContext(ctx).Model(&models.DrugCatalog{}).Where("name = ?", name).Count(&count).Error
+	if err != nil {
+		return false, fmt.Errorf("execute count query: %w", err)
+	}
+	return count > 0, nil
+}
