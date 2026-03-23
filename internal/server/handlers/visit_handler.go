@@ -75,16 +75,30 @@ func (v *VisitHandlers) Create(c echo.Context) error {
 //	@Success		200	{array}	responses.VisitResponse
 //	@Security		ApiKeyAuth
 //	@Router			/visits [get]
-func (p *VisitHandlers) List(c echo.Context) error {
-	visits, err := p.svc.List(c.Request().Context())
-	if err != nil {
-		return responses.ErrorResponse(c, http.StatusNotFound, "failed to list visits: "+err.Error())
-	}
+// func (p *VisitHandlers) List(c echo.Context) error {
+// 	visits, err := p.svc.List(c.Request().Context())
+// 	if err != nil {
+// 		return responses.ErrorResponse(c, http.StatusNotFound, "failed to list visits: "+err.Error())
+// 	}
 
-	response := responses.NewVisitsResponse(visits)
-	return responses.Response(c, http.StatusOK, response)
-}
+// 	response := responses.NewVisitsResponse(visits)
+// 	return responses.Response(c, http.StatusOK, response)
+// }
 
+// ListPaginated godoc
+//
+//	@Summary		List visits with pagination
+//	@Description	Get the list of visits with pagination, sorting, and filtering options
+//	@ID				visits-list-paginated
+//	@Tags			Visits Actions
+//	@Produce		json
+//	@Param			limit	query		int		false	"Number of items per page"	default(10)
+//	@Param			page	query		int		false	"Page number"				default(1)
+//	@Param			sort	query		string	false	"Sort field (e.g., created_at, updated_at)"
+//	@Success		200		{object}	responses.VisitPaginationResponse	"Paginated list of visits"
+//	@Failure		404		{object}	responses.Error
+//	@Security		ApiKeyAuth
+//	@Router			/visits [get]
 func (p *VisitHandlers) ListPaginated(c echo.Context) error {
 	limit, err := strconv.Atoi(c.QueryParam("limit"))
 	if err != nil || limit <= 0 {
@@ -112,6 +126,19 @@ func (p *VisitHandlers) ListPaginated(c echo.Context) error {
 	return responses.Response(c, http.StatusOK, paginatedResult)
 }
 
+// GetVisit godoc
+//
+//	@Summary		Get visit by ID
+//	@Description	Get a single visit by its unique identifier
+//	@ID				visits-get-by-id
+//	@Tags			Visits Actions
+//	@Produce		json
+//	@Param			id	path		int	true	"Visit ID"
+//	@Success		200	{object}	responses.VisitResponse
+//	@Failure		400	{object}	responses.Error
+//	@Failure		404	{object}	responses.Error
+//	@Security		ApiKeyAuth
+//	@Router			/visits/{id} [get]
 func (p *VisitHandlers) Get(c echo.Context) error {
 	patientID, err := strconv.ParseUint(c.Param("id"), 10, 64)
 	if err != nil {
@@ -127,16 +154,31 @@ func (p *VisitHandlers) Get(c echo.Context) error {
 	return responses.Response(c, http.StatusOK, response)
 }
 
+// PreviewVisit godoc
+//
+//	@Summary		Classify visit prompt
+//	@Description	Preview a visit's prompt details by classifying using AI
+//	@ID				visits-preview
+//	@Tags			Visits Actions
+//	@Accept			json
+//	@Produce		json
+//	@Param			params	body	requests.PreviewVisitRequest	true	"Visit title and content"
+//	@Success		200	{object}	responses.VisitResponse
+//	@Failure		400	{object}	responses.Error
+//	@Security		ApiKeyAuth
+//	@Router			/visits/preview [post]
 func (h *VisitHandlers) Preview(c echo.Context) error {
-	var req struct {
-		RawInput string `json:"raw_input"`
+	var requestData requests.PreviewVisitRequest
+
+	if err := c.Bind(&requestData); err != nil {
+		return responses.ErrorResponse(c, http.StatusBadRequest, "failed to bind request: "+err.Error())
 	}
 
-	if err := c.Bind(&req); err != nil {
-		return err
+	if err := requestData.Validate(); err != nil {
+		return responses.ErrorResponse(c, http.StatusBadRequest, "invalid request")
 	}
 
-	result, err := h.svc.Preview(c.Request().Context(), req.RawInput)
+	result, err := h.svc.Preview(c.Request().Context(), requestData.RawInput)
 	slog.Debug("AI preview result", "result", result, "error", err)
 	if err != nil {
 		return err
