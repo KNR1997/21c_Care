@@ -15,18 +15,21 @@ import Input from '@/components/ui/input';
 import Button from '@/components/ui/button';
 import Card from '@/components/common/card';
 import Description from '@/components/ui/description';
+import SelectInput from '@/components/ui/select-input';
 import StickyFooterPanel from '@/components/ui/sticky-footer-panel';
 
 type FormValues = {
   name: string;
   age: string;
-  gender: string;
+  gender: {
+    label: string;
+    value: string;
+  };
 };
 
 const defaultValues = {
   name: '',
   age: '',
-  gender: '',
 };
 
 type IProps = {
@@ -36,6 +39,7 @@ export default function CreateOrUpdatePatientForm({ initialValues }: IProps) {
   const router = useRouter();
   const { t } = useTranslation();
   const {
+    control,
     register,
     handleSubmit,
     formState: { errors },
@@ -59,7 +63,7 @@ export default function CreateOrUpdatePatientForm({ initialValues }: IProps) {
     const input = {
       name: values.name,
       age: Number(values.age),
-      gender: values.gender,
+      gender: values.gender.value,
     };
     if (!initialValues) {
       createPatient({
@@ -72,6 +76,17 @@ export default function CreateOrUpdatePatientForm({ initialValues }: IProps) {
       });
     }
   };
+
+  const genderOptions = [
+    {
+      label: 'Male',
+      value: 'M',
+    },
+    {
+      label: 'Female',
+      value: 'F',
+    },
+  ];
 
   return (
     <form onSubmit={handleSubmit(onSubmit)}>
@@ -103,12 +118,21 @@ export default function CreateOrUpdatePatientForm({ initialValues }: IProps) {
             className="mb-5"
             required
           />
-          <Input
+          {/* <Input
             label={t('form:input-label-gender')}
             {...register('gender')}
             error={t(errors.gender?.message!)}
             variant="outline"
             className="mb-5"
+            required
+          /> */}
+          <SelectInput
+            label={t('form:input-label-gender')}
+            name="gender"
+            control={control}
+            // @ts-ignore
+            options={genderOptions}
+            error={t(errors.gender?.message!)}
             required
           />
         </Card>
