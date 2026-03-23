@@ -50,6 +50,7 @@ func ConfigureRoutes(handlers Handlers) *echo.Echo {
 
 	privateAPI.GET("/settings", handlers.SettingsHandler.Get)
 	privateAPI.POST("/login", handlers.AuthHandler.Login)
+	privateAPI.POST("/refresh", handlers.AuthHandler.RefreshToken)
 	privateAPI.POST("/register", handlers.RegisterHandler.Register)
 	privateAPI.POST("/logout", handlers.AuthHandler.Logout)
 
