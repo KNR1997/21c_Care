@@ -16,7 +16,7 @@ import (
 
 type authService interface {
 	GenerateToken(ctx context.Context, request *requests.LoginRequest) (*responses.LoginResponse, error)
-	RefreshToken(ctx context.Context, request *requests.RefreshRequest) (*responses.LoginResponse, error)
+	RefreshToken(ctx context.Context, request *requests.RefreshRequest) (*responses.RefreshTokenResponse, error)
 	Me(ctx context.Context, userId uint) (*responses.MeResponse, error)
 }
 
