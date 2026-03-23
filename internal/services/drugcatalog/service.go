@@ -15,6 +15,7 @@ type Repository interface {
 	Get(ctx context.Context, id uint) (models.DrugCatalog, error)
 	Update(ctx context.Context, catalog *models.DrugCatalog) error
 	Delete(ctx context.Context, catalog *models.DrugCatalog) error
+	IsExisting(ctx context.Context, name string) (bool, error)
 }
 
 type Service struct {
@@ -26,6 +27,15 @@ func NewService(repo Repository) *Service {
 }
 
 func (s *Service) Create(ctx context.Context, drugcatalog *models.DrugCatalog) error {
+	exists, err := s.repo.IsExisting(ctx, drugcatalog.Name)
+	if err != nil {
+		return fmt.Errorf("check existing drug: %w", err)
+	}
+
+	if exists {
+		return fmt.Errorf("drug with name '%s' already exists", drugcatalog.Name)
+	}
+
 	if err := s.repo.Create(ctx, drugcatalog); err != nil {
 		return fmt.Errorf("create drugcatalog in repository: %w", err)
 	}
