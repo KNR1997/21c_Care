@@ -78,16 +78,30 @@ func (p *PatientHandler) Create(c echo.Context) error {
 //	@Success		200	{array}	responses.PatientResponse
 //	@Security		ApiKeyAuth
 //	@Router			/patients [get]
-func (p *PatientHandler) List(c echo.Context) error {
-	patients, err := p.svc.List(c.Request().Context())
-	if err != nil {
-		return responses.ErrorResponse(c, http.StatusNotFound, "failed to list patients: "+err.Error())
-	}
+// func (p *PatientHandler) List(c echo.Context) error {
+// 	patients, err := p.svc.List(c.Request().Context())
+// 	if err != nil {
+// 		return responses.ErrorResponse(c, http.StatusNotFound, "failed to list patients: "+err.Error())
+// 	}
 
-	response := responses.NewPatientsResponse(patients)
-	return responses.Response(c, http.StatusOK, response)
-}
+// 	response := responses.NewPatientsResponse(patients)
+// 	return responses.Response(c, http.StatusOK, response)
+// }
 
+// ListPaginated godoc
+//
+//	@Summary		List patients with pagination
+//	@Description	Get the list of patients with pagination, sorting, and filtering options
+//	@ID				patients-list-paginated
+//	@Tags			Patients Actions
+//	@Produce		json
+//	@Param			limit	query		int		false	"Number of items per page"	default(10)
+//	@Param			page	query		int		false	"Page number"				default(1)
+//	@Param			sort	query		string	false	"Sort field (e.g., created_at, updated_at)"
+//	@Success		200		{object}	responses.PatientPaginationResponse	"Paginated list of patients"
+//	@Failure		404		{object}	responses.Error
+//	@Security		ApiKeyAuth
+//	@Router			/patients [get]
 func (p *PatientHandler) ListPaginated(c echo.Context) error {
 	limit, err := strconv.Atoi(c.QueryParam("limit"))
 	if err != nil || limit <= 0 {
