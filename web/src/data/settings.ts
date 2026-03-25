@@ -38,6 +38,10 @@ export const useSettingsQuery = ({ language }: { language: string }) => {
   const { data, error, isLoading } = useQuery<Settings, Error>(
     [API_ENDPOINTS.SETTINGS, { language }],
     () => settingsClient.all({ language }),
+    {
+      staleTime: 6 * 60 * 60 * 1000, // 6 hours
+      cacheTime: 6 * 60 * 60 * 1000, // 6 hours
+    },
   );
 
   return {
