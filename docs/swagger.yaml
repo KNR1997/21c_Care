@@ -297,6 +297,28 @@ definitions:
       role:
         type: string
     type: object
+  responses.PatientPaginationResponse:
+    properties:
+      data:
+        items:
+          $ref: '#/definitions/responses.PatientResponse'
+        type: array
+      limit:
+        example: 10
+        type: integer
+      page:
+        example: 1
+        type: integer
+      sort:
+        example: "1"
+        type: string
+      total_pages:
+        example: 2
+        type: integer
+      total_rows:
+        example: 8
+        type: integer
+    type: object
   responses.PatientResponse:
     properties:
       age:
@@ -723,20 +745,38 @@ paths:
       - User Actions
   /patients:
     get:
-      description: Get the list of all patients
-      operationId: patients-get
+      description: Get the list of patients with pagination, sorting, and filtering
+        options
+      operationId: patients-list-paginated
+      parameters:
+      - default: 10
+        description: Number of items per page
+        in: query
+        name: limit
+        type: integer
+      - default: 1
+        description: Page number
+        in: query
+        name: page
+        type: integer
+      - description: Sort field (e.g., created_at, updated_at)
+        in: query
+        name: sort
+        type: string
       produces:
       - application/json
       responses:
         "200":
-          description: OK
+          description: Paginated list of patients
           schema:
-            items:
-              $ref: '#/definitions/responses.PatientResponse'
-            type: array
+            $ref: '#/definitions/responses.PatientPaginationResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/responses.Error'
       security:
       - ApiKeyAuth: []
-      summary: Get patients
+      summary: List patients with pagination
       tags:
       - Patients Actions
     post:

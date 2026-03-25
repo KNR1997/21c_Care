@@ -513,23 +513,48 @@ const docTemplate = `{
                         "ApiKeyAuth": []
                     }
                 ],
-                "description": "Get the list of all patients",
+                "description": "Get the list of patients with pagination, sorting, and filtering options",
                 "produces": [
                     "application/json"
                 ],
                 "tags": [
                     "Patients Actions"
                 ],
-                "summary": "Get patients",
-                "operationId": "patients-get",
+                "summary": "List patients with pagination",
+                "operationId": "patients-list-paginated",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "default": 10,
+                        "description": "Number of items per page",
+                        "name": "limit",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "default": 1,
+                        "description": "Page number",
+                        "name": "page",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "Sort field (e.g., created_at, updated_at)",
+                        "name": "sort",
+                        "in": "query"
+                    }
+                ],
                 "responses": {
                     "200": {
-                        "description": "OK",
+                        "description": "Paginated list of patients",
                         "schema": {
-                            "type": "array",
-                            "items": {
-                                "$ref": "#/definitions/responses.PatientResponse"
-                            }
+                            "$ref": "#/definitions/responses.PatientPaginationResponse"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/responses.Error"
                         }
                     }
                 }
@@ -1539,6 +1564,37 @@ const docTemplate = `{
                 },
                 "role": {
                     "type": "string"
+                }
+            }
+        },
+        "responses.PatientPaginationResponse": {
+            "type": "object",
+            "properties": {
+                "data": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/responses.PatientResponse"
+                    }
+                },
+                "limit": {
+                    "type": "integer",
+                    "example": 10
+                },
+                "page": {
+                    "type": "integer",
+                    "example": 1
+                },
+                "sort": {
+                    "type": "string",
+                    "example": "1"
+                },
+                "total_pages": {
+                    "type": "integer",
+                    "example": 2
+                },
+                "total_rows": {
+                    "type": "integer",
+                    "example": 8
                 }
             }
         },
